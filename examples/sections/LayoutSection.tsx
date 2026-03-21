@@ -9,10 +9,72 @@ import {
   SidebarProvider,
 } from '@/components/sidebar'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/resizable'
+import { Box } from '@/components/box'
+import { Stack } from '@/components/stack'
+import { Grid } from '@/components/grid'
+import { Separator } from '@/components/separator'
 
 export function LayoutSection() {
   return (
-    <GallerySection id="layout" title="Layout" description="Sidebar and Resizable panels">
+    <GallerySection id="layout" title="Layout" description="Box, Stack, Grid, Sidebar and Resizable panels">
+      <div className="example-stack-4">
+
+      {/* Box */}
+      <h3 className="example-subtitle">Box</h3>
+      <div className="example-grid">
+        <Box style={{ padding: '1rem', background: 'var(--muted)', borderRadius: 8 }}>
+          Default <code>&lt;div&gt;</code>
+        </Box>
+        <Box component="section" style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: 8 }}>
+          As <code>&lt;section&gt;</code>
+        </Box>
+        <Box component="article" style={{ padding: '1rem', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8 }}>
+          As <code>&lt;article&gt;</code>
+        </Box>
+      </div>
+
+      {/* Stack */}
+      <h3 className="example-subtitle">Stack</h3>
+      <div className="example-grid">
+        <div>
+          <p className="example-text-xs-muted" style={{ marginBottom: '0.5rem' }}>Column (default)</p>
+          <Stack spacing={2}>
+            {['Item 1', 'Item 2', 'Item 3'].map((label) => (
+              <Box key={label} style={{ padding: '0.5rem 0.75rem', background: 'var(--muted)', borderRadius: 6, fontSize: '0.875rem' }}>{label}</Box>
+            ))}
+          </Stack>
+        </div>
+        <div>
+          <p className="example-text-xs-muted" style={{ marginBottom: '0.5rem' }}>Row</p>
+          <Stack direction="row" spacing={2} alignItems="center">
+            {['A', 'B', 'C'].map((label) => (
+              <Box key={label} style={{ padding: '0.5rem 0.75rem', background: 'var(--muted)', borderRadius: 6, fontSize: '0.875rem' }}>{label}</Box>
+            ))}
+          </Stack>
+        </div>
+        <div>
+          <p className="example-text-xs-muted" style={{ marginBottom: '0.5rem' }}>With divider</p>
+          <Stack spacing={2} divider={<Separator />}>
+            {['First', 'Second', 'Third'].map((label) => (
+              <Box key={label} style={{ fontSize: '0.875rem' }}>{label}</Box>
+            ))}
+          </Stack>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <h3 className="example-subtitle">Grid</h3>
+      <Grid container spacing={2}>
+        {([12, 6, 6, 4, 4, 4, 3, 3, 3, 3, 8, 4] as const).map((size, i) => (
+          <Grid key={i} size={size}>
+            <Box style={{ padding: '0.5rem', background: 'var(--muted)', borderRadius: 6, fontSize: '0.75rem', textAlign: 'center' }}>
+              {size}
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Sidebar + Resizable */}
       <div className="example-grid">
         <div className="example-stack-4">
           <h3 className="example-subtitle">Sidebar</h3>
@@ -61,6 +123,8 @@ export function LayoutSection() {
             </ResizablePanelGroup>
           </div>
         </div>
+      </div>
+
       </div>
     </GallerySection>
   )

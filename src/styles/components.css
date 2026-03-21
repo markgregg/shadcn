@@ -3486,3 +3486,33 @@
   border-color: var(--table-checkbox-in-selected-bg);
   color: var(--table-checkbox-in-selected-fg);
 }
+
+/* --------------------------------------------------------------------------
+   Box
+   -------------------------------------------------------------------------- */
+
+[data-slot='box'] {
+  /* Generic container — all layout is applied via inline styles or className */
+}
+
+/* --------------------------------------------------------------------------
+   Stack
+   -------------------------------------------------------------------------- */
+
+[data-slot='stack'] {
+  /* Flex direction, gap, alignment set via inline styles */
+}
+
+/* --------------------------------------------------------------------------
+   Grid / Grid Item
+   -------------------------------------------------------------------------- */
+
+[data-slot='grid'] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+[data-slot='grid-item'] {
+  box-sizing: border-box;
+  min-width: 0;
+}

@@ -3,11 +3,14 @@ import { describe, expect, it } from 'vitest'
 import { axe } from 'jest-axe'
 
 import {
+  Box,
   Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
+  Grid,
+  Stack,
   Tabs,
   TabsContent,
   TabsList,
@@ -50,6 +53,43 @@ describe('accessibility', () => {
       </ThemeProvider>
     )
 
+    const results = await axe(container)
+    expect(results.violations).toHaveLength(0)
+  })
+
+  it('Box has no obvious violations', async () => {
+    const { container } = render(
+      <Box component="section" aria-label="layout-box">
+        <p>Content</p>
+      </Box>
+    )
+    const results = await axe(container)
+    expect(results.violations).toHaveLength(0)
+  })
+
+  it('Stack has no obvious violations', async () => {
+    const { container } = render(
+      <Stack direction="row" spacing={2} aria-label="layout-stack">
+        <span>Item A</span>
+        <span>Item B</span>
+        <span>Item C</span>
+      </Stack>
+    )
+    const results = await axe(container)
+    expect(results.violations).toHaveLength(0)
+  })
+
+  it('Grid has no obvious violations', async () => {
+    const { container } = render(
+      <Grid container spacing={2} aria-label="grid-root">
+        <Grid size={6}>
+          <p>Left</p>
+        </Grid>
+        <Grid size={6}>
+          <p>Right</p>
+        </Grid>
+      </Grid>
+    )
     const results = await axe(container)
     expect(results.violations).toHaveLength(0)
   })
