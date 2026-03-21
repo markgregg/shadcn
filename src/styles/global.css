@@ -306,6 +306,11 @@
   --select-radius: var(--component-radius);
   --select-px: var(--component-padding-x-md);
   --select-py: var(--component-padding-y);
+  --select-trigger-px: 0.75rem;
+  --select-trigger-py: 0.5rem;
+  --select-item-px: 0.5rem;
+  --select-item-py: 0.375rem;
+  --select-item-icon-offset: 2rem;
   --select-item-bg-hover: var(--accent);
   --select-item-fg-hover: var(--accent-foreground);
 
@@ -331,6 +336,10 @@
   --tabs-radius: var(--component-radius);
   --tabs-px: var(--component-padding-x-md);
   --tabs-py: var(--component-padding-y);
+  --tabs-list-height: 2.25rem;
+  --tabs-list-padding: 0.25rem;
+  --tabs-trigger-px: 0.75rem;
+  --tabs-trigger-py: 0.25rem;
   --tabs-font-size: var(--component-font-size);
   --tabs-font-weight: var(--component-font-weight);
 
@@ -381,6 +390,9 @@
   --checkbox-border-checked: var(--primary);
   --checkbox-radius: var(--radius-inset);
   --checkbox-size: 1rem;
+  --checkbox-icon-size: 0.875rem;
+  --radio-size: 1rem;
+  --radio-indicator-size: 0.5rem;
 
   /* components/switch */
   --switch-track-bg: var(--input);
@@ -390,6 +402,10 @@
   --switch-radius: var(--ds-radius-full);
   --switch-width: 2.25rem;
   --switch-height: 1.25rem;
+  --switch-width-sm: 1.5rem;
+  --switch-height-sm: 0.875rem;
+  --switch-thumb-size: 1rem;
+  --switch-thumb-size-sm: 0.75rem;
 
   /* components/slider */
   --slider-track-bg: var(--muted);
@@ -406,6 +422,7 @@
   --progress-fill-bg: var(--primary);
   --progress-radius: var(--ds-radius-full);
   --progress-height: 0.5rem;
+  --progress-gap: 0.75rem;
 
   /* components/alert */
   --alert-bg: var(--muted);
@@ -637,6 +654,57 @@
 
   /* components/data-table — softer row hover (neutral-800 vs accent/700 for balanced parity with light) */
   --data-table-row-bg-hover: var(--color-neutral-800);
+}
+
+/* --------------------------------------------------------------------------
+   Density overrides
+   -------------------------------------------------------------------------- */
+[data-density='super-high'] {
+  --control-height-sm: 1.25rem;
+  --control-height-md: 1.75rem;
+  --control-height-lg: 2.125rem;
+  --control-px-sm: 0.5rem;
+  --control-px-md: 0.75rem;
+  --control-px-lg: 1rem;
+  --control-gap: 0.375rem;
+
+  --badge-height: 1rem;
+  --badge-px: 0.375rem;
+  --card-padding: 1rem;
+
+  --checkbox-size: 0.875rem;
+  --checkbox-icon-size: 0.75rem;
+  --radio-size: 0.875rem;
+  --radio-indicator-size: 0.4375rem;
+
+  --switch-width: 1.75rem;
+  --switch-height: 1rem;
+  --switch-width-sm: 1.375rem;
+  --switch-height-sm: 0.75rem;
+  --switch-thumb-size: 0.875rem;
+  --switch-thumb-size-sm: 0.625rem;
+
+  --slider-track-height: 0.1875rem;
+  --slider-thumb-size: 0.875rem;
+  --progress-height: 0.3125rem;
+  --progress-gap: 0.5rem;
+
+  --tabs-list-height: 1.875rem;
+  --tabs-list-padding: 0.125rem;
+  --tabs-trigger-px: 0.5rem;
+  --tabs-trigger-py: 0.125rem;
+
+  --select-trigger-px: 0.5rem;
+  --select-trigger-py: 0.25rem;
+  --select-item-px: 0.375rem;
+  --select-item-py: 0.25rem;
+  --select-item-icon-offset: 1.625rem;
+
+  --data-table-row-height-sm: 1rem;
+  --data-table-row-height-md: 1.25rem;
+  --data-table-row-height-lg: 1.75rem;
+  --data-table-cell-px: var(--control-px-sm);
+  --data-table-font-size: 0.8125rem;
 }
 
 /* Accordion animations */

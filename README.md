@@ -60,13 +60,13 @@ A Vite-based React component library with pure CSS theming, TypeScript declarati
 | `Tabs` | `orientation` | `horizontal` | `TabsList` supports `variant` |
 | `Toggle` | `variant`, `size` | `default`, `default` | Works standalone or in group |
 | `ToggleGroup` | `type`, `variant`, `size`, `orientation`, `spacing` | `single`, `default`, `default`, `horizontal`, `0` | Context-propagated item styling |
-| `ThemeProvider` | `defaultTheme`, `storageKey` | `light`, `signal-theme` | Supports persisted light/dark mode |
+| `ThemeProvider` | `defaultTheme`, `storageKey`, `defaultDensity`, `densityStorageKey` | `light`, `signal-theme`, `high`, `signal-density` | Supports persisted light/dark mode and high/super-high density |
 
 ## Migration Checklist
 
 If migrating from older project setups:
 
-1. Replace `next-themes` usage with `ThemeProvider` / `ThemeToggle` from this library.
+1. Replace `next-themes` usage with `ThemeProvider`, `ThemeToggle`, and `DensityToggle` from this library.
 2. Import the package entry (or `styles.css`) so CSS tokens/components are loaded.
 3. Use ESM imports (`import { Button } from 'signal'` or `import { Button } from 'signal/button'`).
 4. If using examples, ensure example-only dependencies remain in `devDependencies`.
@@ -75,12 +75,13 @@ If migrating from older project setups:
 ## Usage
 
 ```tsx
-import { Button, Input, ThemeProvider, ThemeToggle } from 'signal'
+import { Button, DensityToggle, Input, ThemeProvider, ThemeToggle } from 'signal'
 
 export function App() {
   return (
-    <ThemeProvider defaultTheme="light">
+    <ThemeProvider defaultTheme="light" defaultDensity="high">
       <ThemeToggle />
+      <DensityToggle />
       <Button>Action</Button>
       <Input placeholder="Type here" />
     </ThemeProvider>

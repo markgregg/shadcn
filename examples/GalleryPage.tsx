@@ -1,6 +1,7 @@
 'use client'
 
 import { ThemeToggle } from './ThemeToggle'
+import { DensityToggle } from './DensityToggle'
 import { TokensDownloadButton } from './TokensDownloadButton'
 import { ButtonsSection } from './sections/ButtonsSection'
 import { TypographySection } from './sections/TypographySection'
@@ -25,6 +26,7 @@ export function GalleryPage() {
           </div>
           <div className="gallery-page-actions">
             <TokensDownloadButton />
+            <DensityToggle />
             <ThemeToggle />
           </div>
         </div>

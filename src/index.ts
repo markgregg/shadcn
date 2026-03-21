@@ -8,6 +8,7 @@ export { cn } from './utils/index'
 // Theme
 export { ThemeProvider, useTheme } from './components/theme-provider'
 export { ThemeToggle } from './components/theme-toggle'
+export { DensityToggle } from './components/density-toggle'
 
 // UI Components
 export * from './components/accordion'
