@@ -13,6 +13,7 @@ import { Box } from '@/components/box'
 import { Stack } from '@/components/stack'
 import { Grid } from '@/components/grid'
 import { Separator } from '@/components/separator'
+import { Divider } from '@/components/divider'
 
 export function LayoutSection() {
   return (
@@ -73,6 +74,59 @@ export function LayoutSection() {
           </Grid>
         ))}
       </Grid>
+
+      {/* Divider */}
+      <h3 className="example-subtitle">Divider</h3>
+      <div className="example-stack-4">
+        {/* Horizontal sizes */}
+        <div>
+          <p className="example-text-xs-muted" style={{ marginBottom: '0.75rem' }}>Horizontal — sizes</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
+              <div key={size} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', width: 24, flexShrink: 0 }}>{size}</span>
+                <Divider size={size} style={{ flex: 1 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Vertical sizes */}
+        <div>
+          <p className="example-text-xs-muted" style={{ marginBottom: '0.75rem' }}>Vertical — sizes</p>
+          <div style={{ display: 'flex', alignItems: 'center', height: 56, gap: 24 }}>
+            {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
+              <div key={size} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%' }}>
+                <Divider orientation="vertical" size={size} />
+                <span style={{ fontSize: '0.625rem', color: 'var(--muted-foreground)' }}>{size}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Variants */}
+        <div>
+          <p className="example-text-xs-muted" style={{ marginBottom: '0.75rem' }}>Variants</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, border: '1px dashed var(--border)', borderRadius: 8, padding: '0.75rem 0' }}>
+            {(['fullWidth', 'inset', 'middle'] as const).map((variant) => (
+              <div key={variant}>
+                <div style={{ padding: '0 1rem', fontSize: '0.75rem', color: 'var(--muted-foreground)', marginBottom: 8 }}>{variant}</div>
+                <Divider variant={variant} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* With text */}
+        <div>
+          <p className="example-text-xs-muted" style={{ marginBottom: '0.75rem' }}>With text label</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Divider>OR</Divider>
+            <Divider textAlign="left">New section</Divider>
+            <Divider textAlign="right" size="sm">End</Divider>
+          </div>
+        </div>
+      </div>
 
       {/* Sidebar + Resizable */}
       <div className="example-grid">

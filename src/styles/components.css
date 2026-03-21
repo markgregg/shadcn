@@ -3516,3 +3516,85 @@
   box-sizing: border-box;
   min-width: 0;
 }
+
+/* --------------------------------------------------------------------------
+   Divider
+   -------------------------------------------------------------------------- */
+
+[data-slot='divider'] {
+  --divider-size: 1px;
+  flex-shrink: 0;
+  background-color: var(--border);
+}
+
+/* Orientation */
+[data-slot='divider'][data-orientation='horizontal'] {
+  width: 100%;
+  height: var(--divider-size);
+}
+
+[data-slot='divider'][data-orientation='vertical'] {
+  width: var(--divider-size);
+  align-self: stretch;
+  height: auto;
+}
+
+/* Sizes — thickness */
+[data-slot='divider'][data-size='xs'] { --divider-size: 1px; }
+[data-slot='divider'][data-size='sm'] { --divider-size: 2px; }
+[data-slot='divider'][data-size='md'] { --divider-size: 4px; }
+[data-slot='divider'][data-size='lg'] { --divider-size: 8px; }
+[data-slot='divider'][data-size='xl'] { --divider-size: 16px; }
+
+/* Variants — horizontal indent */
+[data-slot='divider'][data-orientation='horizontal'][data-variant='inset'] {
+  margin-left: 1rem;
+}
+
+[data-slot='divider'][data-orientation='horizontal'][data-variant='middle'] {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+/* Variants — vertical indent */
+[data-slot='divider'][data-orientation='vertical'][data-variant='inset'] {
+  margin-top: 1rem;
+}
+
+[data-slot='divider'][data-orientation='vertical'][data-variant='middle'] {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Divider with text — replaces the solid background with flanking lines */
+[data-slot='divider'][data-has-text='true'] {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  height: auto;
+  gap: 0.75rem;
+}
+
+[data-slot='divider'][data-has-text='true']::before,
+[data-slot='divider'][data-has-text='true']::after {
+  content: '';
+  flex: 1;
+  height: var(--divider-size);
+  background-color: var(--border);
+}
+
+/* Text alignment — shrink the leading or trailing line */
+[data-slot='divider'][data-text-align='left']::before {
+  flex: 0 0 1rem;
+}
+
+[data-slot='divider'][data-text-align='right']::after {
+  flex: 0 0 1rem;
+}
+
+[data-slot='divider-text'] {
+  flex-shrink: 0;
+  font-size: var(--ds-text-sm);
+  color: var(--muted-foreground, currentColor);
+  white-space: nowrap;
+}

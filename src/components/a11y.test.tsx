@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   Dialog,
+  Divider,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -89,6 +90,40 @@ describe('accessibility', () => {
           <p>Right</p>
         </Grid>
       </Grid>
+    )
+    const results = await axe(container)
+    expect(results.violations).toHaveLength(0)
+  })
+
+  it('Divider horizontal has no obvious violations', async () => {
+    const { container } = render(
+      <div>
+        <p>Above</p>
+        <Divider />
+        <p>Below</p>
+      </div>
+    )
+    const results = await axe(container)
+    expect(results.violations).toHaveLength(0)
+  })
+
+  it('Divider vertical has no obvious violations', async () => {
+    const { container } = render(
+      <div style={{ display: 'flex', height: 40 }}>
+        <span>Left</span>
+        <Divider orientation="vertical" />
+        <span>Right</span>
+      </div>
+    )
+    const results = await axe(container)
+    expect(results.violations).toHaveLength(0)
+  })
+
+  it('Divider with text has no obvious violations', async () => {
+    const { container } = render(
+      <div>
+        <Divider>OR</Divider>
+      </div>
     )
     const results = await axe(container)
     expect(results.violations).toHaveLength(0)

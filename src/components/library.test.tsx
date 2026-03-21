@@ -8,6 +8,7 @@ import {
   Badge,
   Box,
   Button,
+  Divider,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -67,6 +68,7 @@ describe('module coverage', () => {
     '@/components/command',
     '@/components/context-menu',
     '@/components/dialog',
+    '@/components/divider',
     '@/components/drawer',
     '@/components/dropdown-menu',
     '@/components/form',
@@ -623,5 +625,85 @@ describe('Grid', () => {
     const el = screen.getByLabelText('grid-styled')
     expect(el.className).toContain('my-grid')
     expect(el.style.background).toBe('blue')
+  })
+})
+
+describe('Divider', () => {
+  it('renders a div with data-slot="divider"', () => {
+    render(<Divider aria-label="divider-root" />)
+    const el = screen.getByLabelText('divider-root')
+    expect(el.getAttribute('data-slot')).toBe('divider')
+  })
+
+  it('has role="separator"', () => {
+    render(<Divider aria-label="divider-sep" />)
+    const el = screen.getByLabelText('divider-sep')
+    expect(el.getAttribute('role')).toBe('separator')
+  })
+
+  it('defaults to horizontal orientation', () => {
+    render(<Divider aria-label="divider-h" />)
+    const el = screen.getByLabelText('divider-h')
+    expect(el.getAttribute('data-orientation')).toBe('horizontal')
+    expect(el.getAttribute('aria-orientation')).toBe('horizontal')
+  })
+
+  it('supports vertical orientation', () => {
+    render(<Divider orientation="vertical" aria-label="divider-v" />)
+    const el = screen.getByLabelText('divider-v')
+    expect(el.getAttribute('data-orientation')).toBe('vertical')
+    expect(el.getAttribute('aria-orientation')).toBe('vertical')
+  })
+
+  it('applies the size data attribute', () => {
+    render(<Divider size="lg" aria-label="divider-lg" />)
+    expect(screen.getByLabelText('divider-lg').getAttribute('data-size')).toBe('lg')
+  })
+
+  it('defaults to size xs', () => {
+    render(<Divider aria-label="divider-xs" />)
+    expect(screen.getByLabelText('divider-xs').getAttribute('data-size')).toBe('xs')
+  })
+
+  it('applies the variant data attribute', () => {
+    render(<Divider variant="inset" aria-label="divider-inset" />)
+    expect(screen.getByLabelText('divider-inset').getAttribute('data-variant')).toBe('inset')
+  })
+
+  it('defaults to variant fullWidth', () => {
+    render(<Divider aria-label="divider-fw" />)
+    expect(screen.getByLabelText('divider-fw').getAttribute('data-variant')).toBe('fullWidth')
+  })
+
+  it('renders children text as divider-text span', () => {
+    render(<Divider>OR</Divider>)
+    const textEl = document.querySelector('[data-slot="divider-text"]')
+    expect(textEl).not.toBeNull()
+    expect(textEl?.textContent).toBe('OR')
+  })
+
+  it('sets data-has-text and data-text-align when children present', () => {
+    render(<Divider textAlign="left" aria-label="divider-text">Label</Divider>)
+    const el = screen.getByLabelText('divider-text')
+    expect(el.getAttribute('data-has-text')).toBe('true')
+    expect(el.getAttribute('data-text-align')).toBe('left')
+  })
+
+  it('does not render children for vertical divider', () => {
+    render(
+      <Divider orientation="vertical" aria-label="divider-notext">
+        ignored
+      </Divider>
+    )
+    expect(document.querySelector('[data-slot="divider-text"]')).toBeNull()
+  })
+
+  it('forwards className and style', () => {
+    render(
+      <Divider className="my-divider" style={{ margin: '1rem' }} aria-label="divider-styled" />
+    )
+    const el = screen.getByLabelText('divider-styled')
+    expect(el.className).toContain('my-divider')
+    expect(el.style.margin).toBe('1rem')
   })
 })
