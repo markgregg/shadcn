@@ -545,7 +545,7 @@
 /* --------------------------------------------------------------------------
    Dark mode overrides (color tokens only)
    -------------------------------------------------------------------------- */
-.dark {
+[data-theme='dark'] {
   --background: var(--color-black);
   --foreground: var(--color-neutral-50);
   --card: var(--color-neutral-950);
@@ -884,7 +884,8 @@ body {
 }
 
 /* Light mode: selected row checkbox — white bg, black tick (inverted for contrast) */
-:root:not(.dark) [data-in-selected-row] [data-slot='checkbox'][data-checked] {
+[data-theme='light'] [data-in-selected-row] [data-slot='checkbox'][data-checked],
+:not([data-theme='dark']) [data-in-selected-row] [data-slot='checkbox'][data-checked] {
   background-color: var(--table-checkbox-in-selected-bg);
   border-color: var(--table-checkbox-in-selected-bg);
   color: var(--table-checkbox-in-selected-fg);
@@ -1299,20 +1300,22 @@ body {
 }
 
 /* Theme toggle icons */
-.sun-icon {
+[data-theme='light'] .sun-icon,
+:not([data-theme='dark']) .sun-icon {
   transform: rotate(0) scale(1);
   transition: transform 150ms;
 }
 
-.dark .sun-icon {
+[data-theme='dark'] .sun-icon {
   transform: rotate(-90deg) scale(0);
 }
 
-.moon-icon {
+[data-theme='light'] .moon-icon,
+:not([data-theme='dark']) .moon-icon {
   transform: rotate(90deg) scale(0);
   transition: transform 150ms;
 }
 
-.dark .moon-icon {
+[data-theme='dark'] .moon-icon {
   transform: rotate(0) scale(1);
 }

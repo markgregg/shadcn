@@ -193,7 +193,9 @@ describe('option coverage', () => {
     )
 
     expect(screen.getByLabelText('alert-default').getAttribute('data-variant')).toBe('default')
-    expect(screen.getByLabelText('alert-destructive').getAttribute('data-variant')).toBe('destructive')
+    expect(screen.getByLabelText('alert-destructive').getAttribute('data-variant')).toBe(
+      'destructive'
+    )
 
     badgeVariants.forEach((variant) => {
       expect(screen.getByLabelText(`badge-${variant}`).getAttribute('data-variant')).toBe(variant)
@@ -272,7 +274,9 @@ describe('option coverage', () => {
     expect(group.getAttribute('data-type')).toBe('multiple')
     expect(group.getAttribute('data-orientation')).toBe('vertical')
 
-    expect(screen.getByLabelText('toggle-group-item-a').getAttribute('data-variant')).toBe('outline')
+    expect(screen.getByLabelText('toggle-group-item-a').getAttribute('data-variant')).toBe(
+      'outline'
+    )
     expect(screen.getByLabelText('toggle-group-item-a').getAttribute('data-size')).toBe('sm')
   })
 
@@ -293,7 +297,9 @@ describe('option coverage', () => {
       </div>
     )
 
-    expect(screen.getByLabelText('separator-vertical').getAttribute('data-orientation')).toBe('vertical')
+    expect(screen.getByLabelText('separator-vertical').getAttribute('data-orientation')).toBe(
+      'vertical'
+    )
     expect(screen.getByLabelText('pagination-link').getAttribute('data-size')).toBe('icon-lg')
     expect(screen.getByLabelText('pagination-link').getAttribute('data-active')).toBe('true')
     expect(screen.getByLabelText('resize-handle')).toBeDefined()
@@ -307,9 +313,9 @@ describe('option coverage', () => {
       </ThemeProvider>
     )
 
-    expect(document.documentElement.classList.contains('dark')).toBe(false)
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
     fireEvent.click(screen.getByRole('button', { name: 'Toggle theme' }))
-    expect(document.documentElement.classList.contains('dark')).toBe(true)
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
   })
 
   it('covers dialog controlled and uncontrolled modes', () => {
@@ -683,7 +689,11 @@ describe('Divider', () => {
   })
 
   it('sets data-has-text and data-text-align when children present', () => {
-    render(<Divider textAlign="left" aria-label="divider-text">Label</Divider>)
+    render(
+      <Divider textAlign="left" aria-label="divider-text">
+        Label
+      </Divider>
+    )
     const el = screen.getByLabelText('divider-text')
     expect(el.getAttribute('data-has-text')).toBe('true')
     expect(el.getAttribute('data-text-align')).toBe('left')
