@@ -6,8 +6,15 @@ import { cn } from '@/utils/index'
 
 function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.Props) {
   return (
-    <ScrollAreaPrimitive.Root data-slot="scroll-area" className={cn(className)} {...props}>
-      <ScrollAreaPrimitive.Viewport data-slot="scroll-area-viewport">
+    <ScrollAreaPrimitive.Root
+      data-slot="scroll-area"
+      className={cn('scroll-area', className)}
+      {...props}
+    >
+      <ScrollAreaPrimitive.Viewport
+        data-slot="scroll-area-viewport"
+        className="scroll-area-viewport"
+      >
         {children}
       </ScrollAreaPrimitive.Viewport>
       <ScrollBar />
@@ -26,10 +33,10 @@ function ScrollBar({
       data-slot="scroll-area-scrollbar"
       data-orientation={orientation}
       orientation={orientation}
-      className={cn(className)}
+      className={cn('scroll-area-scrollbar', className)}
       {...props}
     >
-      <ScrollAreaPrimitive.Thumb data-slot="scroll-area-thumb" />
+      <ScrollAreaPrimitive.Thumb data-slot="scroll-area-thumb" className="scroll-area-thumb" />
     </ScrollAreaPrimitive.Scrollbar>
   )
 }

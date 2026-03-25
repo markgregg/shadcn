@@ -48,7 +48,9 @@ function resolveDensity(defaultDensity: Density, densityStorageKey: string): Den
 
 function applyThemeClass(theme: Theme) {
   if (typeof document === 'undefined') return
-  document.documentElement.setAttribute('data-theme', theme)
+  const root = document.documentElement
+  root.setAttribute('data-theme', theme)
+  root.classList.toggle('dark', theme === 'dark')
 }
 
 function applyDensityClass(density: Density) {

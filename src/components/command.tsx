@@ -11,7 +11,7 @@ const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive data-slot="command" ref={ref} className={cn(className)} {...props} />
+  <CommandPrimitive ref={ref} className={cn('command', className)} {...props} />
 ))
 Command.displayName = CommandPrimitive.displayName
 
@@ -21,7 +21,7 @@ const CommandDialog = ({
 }: Omit<React.ComponentProps<typeof Dialog>, 'children'> & { children?: React.ReactNode }) => {
   return (
     <Dialog {...props}>
-      <DialogContent>
+      <DialogContent className="command-dialog">
         <Command>{children}</Command>
       </DialogContent>
     </Dialog>
@@ -32,14 +32,9 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div data-slot="command-input-wrapper" cmdk-input-wrapper="">
-    <SearchIcon />
-    <CommandPrimitive.Input
-      data-slot="command-input"
-      ref={ref}
-      className={cn(className)}
-      {...props}
-    />
+  <div className="command-input-row" cmdk-input-wrapper="">
+    <SearchIcon aria-hidden />
+    <CommandPrimitive.Input ref={ref} className={cn('command-input', className)} {...props} />
   </div>
 ))
 
@@ -49,7 +44,7 @@ const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive.List data-slot="command-list" ref={ref} className={cn(className)} {...props} />
+  <CommandPrimitive.List ref={ref} className={cn('command-list', className)} {...props} />
 ))
 
 CommandList.displayName = CommandPrimitive.List.displayName
@@ -57,7 +52,7 @@ CommandList.displayName = CommandPrimitive.List.displayName
 const CommandEmpty = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Empty>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
->((props, ref) => <CommandPrimitive.Empty data-slot="command-empty" ref={ref} {...props} />)
+>((props, ref) => <CommandPrimitive.Empty ref={ref} className="command-empty" {...props} />)
 
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName
 
@@ -65,12 +60,7 @@ const CommandGroup = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive.Group
-    data-slot="command-group"
-    ref={ref}
-    className={cn(className)}
-    {...props}
-  />
+  <CommandPrimitive.Group ref={ref} className={cn('command-group', className)} {...props} />
 ))
 
 CommandGroup.displayName = CommandPrimitive.Group.displayName
@@ -79,12 +69,7 @@ const CommandSeparator = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive.Separator
-    data-slot="command-separator"
-    ref={ref}
-    className={cn(className)}
-    {...props}
-  />
+  <CommandPrimitive.Separator ref={ref} className={cn('command-separator', className)} {...props} />
 ))
 CommandSeparator.displayName = CommandPrimitive.Separator.displayName
 
@@ -92,13 +77,13 @@ const CommandItem = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive.Item data-slot="command-item" ref={ref} className={cn(className)} {...props} />
+  <CommandPrimitive.Item ref={ref} className={cn('command-item', className)} {...props} />
 ))
 
 CommandItem.displayName = CommandPrimitive.Item.displayName
 
 const CommandShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => {
-  return <span data-slot="command-shortcut" className={cn(className)} {...props} />
+  return <span className={cn('command-shortcut', className)} {...props} />
 }
 CommandShortcut.displayName = 'CommandShortcut'
 

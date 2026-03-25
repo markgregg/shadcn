@@ -1,9 +1,7 @@
 import type { GlobalProvider } from '@ladle/react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
-import '../src/styles/tokens.css'
-import '../src/styles/global.css'
-import '../src/styles/components.css'
+import '../src/styles/main.css'
 import { useTheme } from '../src/components/theme-provider'
 import { ThemeProvider } from '../src/components/theme-provider'
 

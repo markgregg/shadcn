@@ -36,7 +36,11 @@ function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
 
 function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) {
   return (
-    <DialogPrimitive.Backdrop data-slot="dialog-overlay" className={cn(className)} {...props} />
+    <DialogPrimitive.Backdrop
+      data-slot="dialog-overlay"
+      className={cn('dialog-overlay', className)}
+      {...props}
+    />
   )
 }
 
@@ -51,12 +55,18 @@ function DialogContent({
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Popup data-slot="dialog-content" className={cn(className)} {...props}>
+      <DialogPrimitive.Popup
+        data-slot="dialog-content"
+        className={cn('dialog-content', className)}
+        {...props}
+      >
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            render={<Button variant="ghost" className="dialog-close-button" size="icon-sm" />}
+            render={
+              <Button variant="ghost" className="dialog-close-button focus-ring" size="icon-sm" />
+            }
           >
             <XIcon />
             <span className="sr-only">Close</span>
@@ -68,7 +78,7 @@ function DialogContent({
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="dialog-header" className={cn(className)} {...props} />
+  return <div data-slot="dialog-header" className={cn('dialog-header', className)} {...props} />
 }
 
 function DialogFooter({
@@ -80,7 +90,7 @@ function DialogFooter({
   showCloseButton?: boolean
 }) {
   return (
-    <div data-slot="dialog-footer" className={cn(className)} {...props}>
+    <div data-slot="dialog-footer" className={cn('dialog-footer', className)} {...props}>
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close render={<Button variant="outline" />}>Close</DialogPrimitive.Close>
@@ -90,14 +100,20 @@ function DialogFooter({
 }
 
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
-  return <DialogPrimitive.Title data-slot="dialog-title" className={cn(className)} {...props} />
+  return (
+    <DialogPrimitive.Title
+      data-slot="dialog-title"
+      className={cn('dialog-title', className)}
+      {...props}
+    />
+  )
 }
 
 function DialogDescription({ className, ...props }: DialogPrimitive.Description.Props) {
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn(className)}
+      className={cn('dialog-description', className)}
       {...props}
     />
   )

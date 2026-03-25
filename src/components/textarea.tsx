@@ -4,7 +4,7 @@ import { cn } from '@/utils/index'
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<'textarea'>>(
   ({ className, ...props }, ref) => {
-    return <textarea data-slot="textarea" className={cn(className)} ref={ref} {...props} />
+    return <textarea className={cn('textarea focus-ring', className)} ref={ref} {...props} />
   }
 )
 Textarea.displayName = 'Textarea'

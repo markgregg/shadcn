@@ -1,0 +1,129 @@
+/* Keyframes, third-party overrides, utilities — after component layers */
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+[data-sonner-toaster].toaster {
+  transition: transform 0.4s ease !important;
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast] {
+  transition:
+    transform 0.4s ease,
+    opacity 0.4s ease,
+    height 0.4s ease,
+    box-shadow 0.2s ease !important;
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast] > * {
+  transition: opacity 0.4s ease !important;
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast][data-swiping='true'] {
+  transition: none !important;
+}
+
+@layer utilities {
+  .focus-ring:focus-visible {
+    outline: none;
+    border-color: var(--color-ring);
+    box-shadow: 0 0 0 var(--size-ring-width) color-mix(in oklch, var(--color-ring) 50%, transparent);
+  }
+
+  .animate-accordion-down {
+    animation: accordion-down var(--duration-normal) var(--ease-out);
+  }
+  .animate-accordion-up {
+    animation: accordion-up var(--duration-normal) var(--ease-out);
+  }
+
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .text-left {
+    text-align: left;
+  }
+  .text-center {
+    text-align: center;
+  }
+  .text-right {
+    text-align: right;
+  }
+  .text-primary-foreground {
+    color: var(--color-primary-fg);
+  }
+  .bg-transparent {
+    background-color: transparent;
+  }
+
+  .flex {
+    display: flex;
+  }
+  .h-full {
+    height: 100%;
+  }
+  .w-full {
+    width: 100%;
+  }
+  .items-center {
+    align-items: center;
+  }
+  .font-bold {
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+:root:not(.dark) [data-in-selected-row] [data-slot='checkbox'][aria-checked='true'] {
+  background-color: var(--table-checkbox-in-selected-bg);
+  border-color: var(--table-checkbox-in-selected-bg);
+  color: var(--table-checkbox-in-selected-fg);
+}

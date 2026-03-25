@@ -27,7 +27,9 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
 }
 
 function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props) {
-  return <AvatarPrimitive.Fallback data-slot="avatar-fallback" className={cn(className)} {...props} />
+  return (
+    <AvatarPrimitive.Fallback data-slot="avatar-fallback" className={cn(className)} {...props} />
+  )
 }
 
 function AvatarBadge({ className, ...props }: React.ComponentProps<'span'>) {

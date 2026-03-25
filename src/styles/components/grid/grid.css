@@ -1,0 +1,11 @@
+@layer components {
+  [data-slot='grid'] {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  [data-slot='grid-item'] {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+}

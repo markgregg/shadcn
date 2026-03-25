@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/table'
 import { AspectRatio } from '@/components/aspect-ratio'
-import { TradingBlotter } from '../trading-blotter'
+import { TradingBlotter } from '@/components/trading-blotter'
 
 const tableData = [
   { name: 'Alice', email: 'alice@example.com', role: 'Admin' },

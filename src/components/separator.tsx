@@ -9,7 +9,7 @@ function Separator({ className, orientation = 'horizontal', ...props }: Separato
     <SeparatorPrimitive
       data-slot="separator"
       orientation={orientation}
-      className={cn(className)}
+      className={cn('separator', className)}
       {...props}
     />
   )

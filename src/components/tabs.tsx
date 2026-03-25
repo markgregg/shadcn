@@ -1,6 +1,7 @@
 'use client'
 
 import { Tabs as TabsPrimitive } from '@base-ui/react/tabs'
+import type { ClassValue } from 'clsx'
 
 import { cn } from '@/utils/index'
 
@@ -9,35 +10,60 @@ function Tabs({ className, orientation = 'horizontal', ...props }: TabsPrimitive
     <TabsPrimitive.Root
       data-slot="tabs"
       data-orientation={orientation}
-      className={cn(className)}
+      className={cn('tabs', className)}
       {...props}
     />
   )
+}
+
+const listVariantClass = {
+  default: '',
+  line: 'tabs-list--line',
+} as const
+
+function tabsListVariants({
+  variant = 'default',
+  className,
+}: {
+  variant?: keyof typeof listVariantClass
+  className?: ClassValue
+} = {}) {
+  return cn('tabs-list', listVariantClass[variant], className)
 }
 
 function TabsList({
   className,
   variant = 'default',
   ...props
-}: TabsPrimitive.List.Props & {
-  variant?: 'default' | 'line'
-}) {
+}: TabsPrimitive.List.Props & { variant?: keyof typeof listVariantClass }) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
       data-variant={variant}
-      className={cn(className)}
+      className={cn(tabsListVariants({ variant }), className)}
       {...props}
     />
   )
 }
 
 function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
-  return <TabsPrimitive.Tab data-slot="tabs-trigger" className={cn(className)} {...props} />
+  return (
+    <TabsPrimitive.Tab
+      data-slot="tabs-trigger"
+      className={cn('tabs-trigger focus-ring', className)}
+      {...props}
+    />
+  )
 }
 
 function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
-  return <TabsPrimitive.Panel data-slot="tabs-content" className={cn(className)} {...props} />
+  return (
+    <TabsPrimitive.Panel
+      data-slot="tabs-content"
+      className={cn('tabs-content focus-ring', className)}
+      {...props}
+    />
+  )
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }

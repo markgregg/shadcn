@@ -12,8 +12,13 @@ function Switch({
   size?: 'sm' | 'default'
 }) {
   return (
-    <SwitchPrimitive.Root data-slot="switch" data-size={size} className={cn(className)} {...props}>
-      <SwitchPrimitive.Thumb data-slot="switch-thumb" />
+    <SwitchPrimitive.Root
+      data-slot="switch"
+      data-size={size}
+      className={cn('switch focus-ring', className)}
+      {...props}
+    >
+      <SwitchPrimitive.Thumb data-slot="switch-thumb" className="switch-thumb" />
     </SwitchPrimitive.Root>
   )
 }

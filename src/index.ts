@@ -1,6 +1,4 @@
-import './styles/tokens.css'
-import './styles/global.css'
-import './styles/components.css'
+import './styles/main.css'
 
 // Core utilities
 export { cn } from './utils/index'
@@ -63,3 +61,5 @@ export * from './components/textarea'
 export * from './components/toggle'
 export * from './components/toggle-group'
 export * from './components/tooltip'
+export { TradingBlotter } from './components/trading-blotter'
+export type { TradingBlotterRow } from './components/trading-blotter/data'

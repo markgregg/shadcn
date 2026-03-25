@@ -1,0 +1,56 @@
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+  }
+
+  h1 {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--leading-tight);
+  }
+  h2 {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+  }
+  h3 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+  }
+  h4 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-medium);
+  }
+  h5 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+  }
+  h6 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+  }
+
+  code,
+  pre,
+  kbd {
+    font-family: var(--font-mono);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: var(--size-ring-offset);
+  }
+
+  ::selection {
+    background-color: var(--color-selection);
+    color: var(--color-selection-fg);
+  }
+}

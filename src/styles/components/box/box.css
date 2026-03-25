@@ -1,0 +1,5 @@
+@layer components {
+  [data-slot='box'] {
+    /* Generic container — layout via inline styles or className */
+  }
+}

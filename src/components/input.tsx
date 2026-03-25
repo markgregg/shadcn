@@ -3,7 +3,9 @@ import * as React from 'react'
 import { cn } from '@/utils/index'
 
 function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
-  return <input type={type} data-slot="input" className={cn(className)} {...props} />
+  return (
+    <input type={type} data-slot="input" className={cn('input focus-ring', className)} {...props} />
+  )
 }
 
 export { Input }

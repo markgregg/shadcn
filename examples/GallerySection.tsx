@@ -1,6 +1,3 @@
-import '@/styles/tokens.css'
-import '@/styles/global.css'
-import '@/styles/components.css'
 import './examples.css'
 
 import { cn } from '@/utils/index'

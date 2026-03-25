@@ -17,7 +17,7 @@ function InputOTP({
     <OTPInput
       data-slot="input-otp"
       containerClassName={cn('input-otp-container', containerClassName)}
-      className={cn('input-otp-input', className)}
+      className={cn(className)}
       {...props}
     />
   )
@@ -38,16 +38,11 @@ function InputOTPSlot({
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
 
   return (
-    <div
-      data-slot="input-otp-slot"
-      data-active={isActive}
-      className={cn(className)}
-      {...props}
-    >
+    <div data-slot="input-otp-slot" data-active={isActive} className={cn(className)} {...props}>
       {char}
       {hasFakeCaret && (
-        <div data-slot="input-otp-caret-container">
-          <div data-slot="input-otp-caret" />
+        <div className="input-otp-caret-wrap" aria-hidden>
+          <div className="input-otp-caret" />
         </div>
       )}
     </div>

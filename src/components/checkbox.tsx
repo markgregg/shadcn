@@ -7,8 +7,12 @@ import { CheckIcon } from 'lucide-react'
 
 function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
   return (
-    <CheckboxPrimitive.Root data-slot="checkbox" className={cn(className)} {...props}>
-      <CheckboxPrimitive.Indicator data-slot="checkbox-indicator">
+    <CheckboxPrimitive.Root
+      data-slot="checkbox"
+      className={cn('checkbox focus-ring', className)}
+      {...props}
+    >
+      <CheckboxPrimitive.Indicator data-slot="checkbox-indicator" className="checkbox-indicator">
         <CheckIcon />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>

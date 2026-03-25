@@ -1,0 +1,5 @@
+@layer components {
+  [data-slot='stack'] {
+    /* Flex direction, gap, alignment set via inline styles */
+  }
+}

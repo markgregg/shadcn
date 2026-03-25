@@ -25,7 +25,7 @@ export const InButton: Story = () => (
       padding: '8px 16px',
       borderRadius: 6,
       background: 'var(--color-primary)',
-      color: 'var(--color-primary-foreground)',
+      color: 'var(--color-primary-fg)',
       border: 'none',
       cursor: 'not-allowed',
       fontSize: 14,

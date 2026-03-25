@@ -1,7 +1,9 @@
+import * as React from 'react'
+
 import { cn } from '@/utils/index'
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div data-slot="skeleton" className={cn(className)} {...props} />
+  return <div className={cn('skeleton', className)} {...props} />
 }
 
 export { Skeleton }

@@ -20,7 +20,7 @@ function Slider({
 
   return (
     <SliderPrimitive.Root
-      className={cn(className)}
+      className={cn('slider-root', className)}
       data-slot="slider"
       defaultValue={defaultValue}
       value={value}
@@ -29,12 +29,12 @@ function Slider({
       thumbAlignment="edge"
       {...props}
     >
-      <SliderPrimitive.Control data-slot="slider-control">
-        <SliderPrimitive.Track data-slot="slider-track">
-          <SliderPrimitive.Indicator data-slot="slider-range" />
+      <SliderPrimitive.Control className="slider-control">
+        <SliderPrimitive.Track data-slot="slider-track" className="slider-track">
+          <SliderPrimitive.Indicator data-slot="slider-range" className="slider-range" />
         </SliderPrimitive.Track>
         {Array.from({ length: _values.length }, (_, index) => (
-          <SliderPrimitive.Thumb data-slot="slider-thumb" key={index} />
+          <SliderPrimitive.Thumb data-slot="slider-thumb" key={index} className="slider-thumb" />
         ))}
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>
