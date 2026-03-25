@@ -129,3 +129,9 @@ html:not(.dark):not([data-theme='dark'])
   border-color: var(--table-checkbox-in-selected-bg);
   color: var(--table-checkbox-in-selected-fg);
 }
+
+/* Ladle preview shell — default chrome is grey; use semantic bg so dark mode matches --color-bg */
+.ladle-background,
+.ladle-wrapper {
+  background-color: var(--color-bg);
+}

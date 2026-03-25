@@ -9,22 +9,12 @@
   }
 
   .gallery-page-header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
     display: flex;
     height: var(--header-height);
     flex-shrink: 0;
     align-items: center;
     border-bottom: 1px solid var(--color-border);
-    background-color: color-mix(in oklch, var(--color-bg) 95%, transparent);
-    backdrop-filter: blur(8px);
-  }
-
-  @supports (backdrop-filter: blur(1px)) {
-    .gallery-page-header {
-      background-color: color-mix(in oklch, var(--color-bg) 60%, transparent);
-    }
+    background-color: var(--color-bg);
   }
 
   .gallery-page-header-inner {
@@ -66,7 +56,6 @@
      Section chrome (GallerySection)
      -------------------------------------------------------------------------- */
   .gallery-section {
-    scroll-margin-top: var(--header-height, 7rem);
     border-bottom: 1px solid var(--color-border);
     padding-block: 3rem;
   }
@@ -78,23 +67,13 @@
   }
 
   .gallery-section-header {
-    position: sticky;
-    top: var(--header-height, 7rem);
-    z-index: 10;
     margin-inline: -1rem;
     height: fit-content;
     min-height: fit-content;
     overflow: visible;
-    background-color: color-mix(in oklch, var(--color-bg) 95%, transparent);
+    background-color: var(--color-bg);
     padding-inline: 1rem;
     padding-block: 1rem;
-    backdrop-filter: blur(8px);
-  }
-
-  @supports (backdrop-filter: blur(1px)) {
-    .gallery-section-header {
-      background-color: color-mix(in oklch, var(--color-bg) 60%, transparent);
-    }
   }
 
   .gallery-section-title {
