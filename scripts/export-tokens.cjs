@@ -1139,6 +1139,46 @@ const SEMANTIC_MAP = {
     type: "color",
     scopes: ["TEXT_FILL"],
   },
+  "--calendar-cell-size": {
+    path: ["components", "calendar", "cell-size"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--sonner-bg": {
+    path: ["components", "sonner", "background"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--sonner-border": {
+    path: ["components", "sonner", "border"],
+    type: "color",
+    scopes: ["STROKE_COLOR"],
+  },
+  "--sonner-fg": {
+    path: ["components", "sonner", "foreground"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--sonner-muted-fg": {
+    path: ["components", "sonner", "muted-foreground"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--sonner-primary-bg": {
+    path: ["components", "sonner", "primary-background"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--sonner-primary-fg": {
+    path: ["components", "sonner", "primary-foreground"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--sonner-muted-bg": {
+    path: ["components", "sonner", "muted-background"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
 };
 
 function setDeep(root, parts, leaf) {
