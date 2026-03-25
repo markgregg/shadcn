@@ -54,8 +54,21 @@ This library uses **pure CSS** (no Tailwind runtime). Styling is layered and tok
 
 ### Figma export
 
-- **`npm run tokens`** runs `scripts/export-tokens.cjs`, which parses the same CSS sources as the barrel (primitives, semantic, and every file listed in `component-tokens.css`) and writes **`tokens/light.json`** and **`tokens/dark.json`** for Figma’s native Variables import.
-- Regenerate after changing token CSS so design tooling stays in sync.
+1. **Generate JSON** — from the repo root run:
+   ```bash
+   npm run tokens
+   ```
+   This executes **`scripts/export-tokens.cjs`**, reads the same CSS as the app (`primitives.css`, `semantic.css`, and every `*.tokens.css` imported from **`src/styles/tokens/component-tokens.css`**), and overwrites:
+   - **`tokens/light.json`** — variable values for the Light mode
+   - **`tokens/dark.json`** — variable values for the Dark mode  
+
+   Commit those files when token CSS changes so the repo and Figma stay aligned.
+
+2. **Import in Figma** — use Figma’s **Variables** panel → menu → **Import variables** (or your workspace’s equivalent for DTCG / native JSON import). Import **`light.json`** and **`dark.json`** and map them to **Light** and **Dark** modes respectively so paired tokens resolve correctly.
+
+3. **New component tokens** — if you add custom properties in a new `*.tokens.css`, add the file to **`component-tokens.css`**, then add matching entries to **`SEMANTIC_MAP`** in **`scripts/export-tokens.cjs`** if the exporter warns about unmapped variables (otherwise they are skipped in the JSON).
+
+In **Ladle**, the gallery header **download** control saves the same **`light.json` / `dark.json`** content as bundled copies (handy for designers without running the script locally).
 
 ## Scripts
 
