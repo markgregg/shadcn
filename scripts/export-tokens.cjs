@@ -5,6 +5,16 @@
  *
  * Source list must stay aligned with src/styles/tokens/component-tokens.css
  * (same *.tokens.css files, plus primitives + semantic).
+ *
+ * Primitives:
+ *   - Color swatches: --primitive-* in primitives.css (+ white/black).
+ *   - Spacing scale: steps in SPACING_SCALE_STEPS × SPACING_PX (4px); not read from CSS
+ *     because semantic layout uses rem-based --space-* tokens instead of the Tailwind grid.
+ *   - Radius / font sizes / weights / line-height: resolved from merged :root (semantic.css)
+ *     where those variables exist, with numeric fallbacks if a var is missing.
+ *
+ * Every semantic/component export needs an entry in SEMANTIC_MAP (plus TOKEN_SOURCE_FILES so
+ * the variable resolves). Unmapped :root custom properties trigger a WARN at export time.
  */
 
 const fs = require("fs");
@@ -34,9 +44,9 @@ const TOKENS_DIR = path.join(ROOT, "tokens");
 const OUTPUT_LIGHT = path.join(TOKENS_DIR, "light.json");
 const OUTPUT_DARK = path.join(TOKENS_DIR, "dark.json");
 
-const SPACING_PX = 4; /* 0.25rem = 4px */
+const SPACING_PX = 4; /* 0.25rem = 4px — matches Tailwind-style spacing scale */
 
-/** Matches primitive/spacing/* keys in buildPrimitives (step × base px). */
+/** Matches primitive/spacing/* keys in buildPrimitives (step × SPACING_PX). */
 const SPACING_SCALE_STEPS = [
   0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 20, 24, 64,
 ];
@@ -584,6 +594,18 @@ function resolveRadiusPrimitiveFromCtx(cssVar, ctx) {
   return resolveRadiusPrimitiveRef(raw, ctx, new Set(), 0);
 }
 
+/** Map `--primitive-neutral-950` etc. to DTCG palette paths (semantic CSS uses these, not `--color-*`). */
+function primitiveVarToPalettePath(varName) {
+  const n = String(varName).toLowerCase();
+  if (n === "--primitive-white") return "primitive.color.white";
+  if (n === "--primitive-black") return "primitive.color.black";
+  const m = n.match(/^--primitive-([a-z]+)-(\d+)$/);
+  if (m && PALETTE_FAMILIES.has(m[1])) {
+    return `primitive.color.${m[1]}.${m[2]}`;
+  }
+  return null;
+}
+
 /**
  * Resolve a CSS var to either:
  *   { kind: 'palette', path: 'primitive.color.neutral.950' }
@@ -594,6 +616,9 @@ function resolveTokenValue(name, ctx, paletteHexByVar, depth = 0) {
   if (depth > 32) return { kind: "unresolved", name };
   const raw = ctx[name];
   if (raw === undefined) return { kind: "unresolved", name };
+
+  const primPath = primitiveVarToPalettePath(name);
+  if (primPath) return { kind: "palette", path: primPath };
 
   const s = String(raw).trim();
 
@@ -783,6 +808,16 @@ const SEMANTIC_MAP = {
     type: "color",
     scopes: ["STROKE_COLOR"],
   },
+  "--color-grid-selection": {
+    path: ["state", "grid-selection"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-surface-fixed-light": {
+    path: ["surface", "fixed-light"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
   "--color-link": {
     path: ["text", "link"],
     type: "color",
@@ -835,6 +870,51 @@ const SEMANTIC_MAP = {
   },
   "--chart-5": {
     path: ["chart", "5"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-6": {
+    path: ["chart", "6"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-7": {
+    path: ["chart", "7"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-8": {
+    path: ["chart", "8"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-9": {
+    path: ["chart", "9"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-10": {
+    path: ["chart", "10"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-11": {
+    path: ["chart", "11"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-12": {
+    path: ["chart", "12"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-13": {
+    path: ["chart", "13"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-14": {
+    path: ["chart", "14"],
     type: "color",
     scopes: ["ALL_FILLS"],
   },
@@ -907,6 +987,21 @@ const SEMANTIC_MAP = {
     path: ["dataSyntax", "value", "neutral"],
     type: "color",
     scopes: ["TEXT_FILL"],
+  },
+  "--size-ring-width": {
+    path: ["sizing", "ring-width"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--size-ring-offset": {
+    path: ["sizing", "ring-offset"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--font-size-data": {
+    path: ["typography", "font-size-data"],
+    type: "number",
+    scopes: ["FONT_SIZE"],
   },
   "--radius-md": {
     path: ["sizing", "radius-md"],
@@ -1495,28 +1590,34 @@ function buildPrimitives(themeVars) {
     };
   }
 
+  /** Read numeric/rem tokens from semantic :root (px for font sizes, unitless for line-height). */
+  const nf = (vn, fb) => {
+    const n = resolveNumericFromCtx(vn, themeVars);
+    return n !== null && Number.isFinite(n) ? n : fb;
+  };
+
   /* Omit font family string primitives — Figma’s JSON importer often rejects string tokens here. */
   const primitiveFont = {
     size: {
-      xs: numPrim(12, "FONT_SIZE"),
-      sm: numPrim(14, "FONT_SIZE"),
-      md: numPrim(16, "FONT_SIZE"),
-      lg: numPrim(18, "FONT_SIZE"),
-      xl: numPrim(20, "FONT_SIZE"),
-      "2xl": numPrim(24, "FONT_SIZE"),
-      "3xl": numPrim(30, "FONT_SIZE"),
-      "4xl": numPrim(36, "FONT_SIZE"),
+      xs: numPrim(nf("--font-size-xs", 12), "FONT_SIZE"),
+      sm: numPrim(nf("--font-size-sm", 14), "FONT_SIZE"),
+      md: numPrim(nf("--font-size-base", 16), "FONT_SIZE"),
+      lg: numPrim(nf("--font-size-lg", 18), "FONT_SIZE"),
+      xl: numPrim(nf("--font-size-xl", 20), "FONT_SIZE"),
+      "2xl": numPrim(nf("--font-size-2xl", 24), "FONT_SIZE"),
+      "3xl": numPrim(nf("--font-size-3xl", 30), "FONT_SIZE"),
+      "4xl": numPrim(nf("--font-size-4xl", 36), "FONT_SIZE"),
     },
     weight: {
-      regular: numPrim(400, "FONT_WEIGHT"),
-      medium: numPrim(500, "FONT_WEIGHT"),
-      semibold: numPrim(600, "FONT_WEIGHT"),
-      bold: numPrim(700, "FONT_WEIGHT"),
+      regular: numPrim(nf("--font-weight-regular", 400), "FONT_WEIGHT"),
+      medium: numPrim(nf("--font-weight-medium", 500), "FONT_WEIGHT"),
+      semibold: numPrim(nf("--font-weight-semibold", 600), "FONT_WEIGHT"),
+      bold: numPrim(nf("--font-weight-bold", 700), "FONT_WEIGHT"),
     },
     lineHeight: {
-      tight: numPrim(1.25, "LINE_HEIGHT"),
-      normal: numPrim(1.5, "LINE_HEIGHT"),
-      relaxed: numPrim(1.75, "LINE_HEIGHT"),
+      tight: numPrim(nf("--leading-tight", 1.25), "LINE_HEIGHT"),
+      normal: numPrim(nf("--leading-normal", 1.5), "LINE_HEIGHT"),
+      relaxed: numPrim(nf("--leading-relaxed", 1.75), "LINE_HEIGHT"),
     },
     letterSpacing: {
       tight: numPrim(-2, "LETTER_SPACING"),
@@ -1673,7 +1774,6 @@ function main() {
   // Warn for :root vars not exported (skip known primitives / motion / component-only)
   function isKnownUnmappedToken(k) {
     if (/^--primitive-/.test(k)) return true;
-    if (/^--chart-\d+$/.test(k)) return true;
     if (/^--color-primary-alpha-/.test(k)) return true;
     if (/^--shadow-/.test(k)) return true;
     if (/^--font-/.test(k)) return true;
@@ -1684,11 +1784,7 @@ function main() {
     if (/^--z-/.test(k)) return true;
     if (/^--container-/.test(k)) return true;
     if (/^--color-overlay-/.test(k)) return true;
-    if (/^--size-ring-/.test(k)) return true;
     if (k === "--color-input-surface") return true;
-    if (k === "--color-grid-selection") return true;
-    if (k === "--color-surface-fixed-light") return true;
-    if (k === "--font-size-data") return true;
     if (/^--color-(?:destructive|success|warning|info)-subtle/.test(k)) return true;
     if (k === "--space-gap-control") return true;
     if (/^--(?:dialog|drawer)-overlay-bg$/.test(k)) return true;
