@@ -2271,6 +2271,10 @@
         "$type": "number",
         "$value": 24
       },
+      "7": {
+        "$type": "number",
+        "$value": 28
+      },
       "8": {
         "$type": "number",
         "$value": 32
@@ -2715,59 +2719,59 @@
       },
       "control-height-sm": {
         "$type": "number",
-        "$value": 24
+        "$value": "{primitive/spacing/6}"
       },
       "control-height-md": {
         "$type": "number",
-        "$value": 32
+        "$value": "{primitive/spacing/8}"
       },
       "control-height-lg": {
         "$type": "number",
-        "$value": 40
+        "$value": "{primitive/spacing/10}"
       },
       "control-px-sm": {
         "$type": "number",
-        "$value": 12
+        "$value": "{primitive/spacing/3}"
       },
       "control-px-md": {
         "$type": "number",
-        "$value": 16
+        "$value": "{primitive/spacing/4}"
       },
       "control-px-lg": {
         "$type": "number",
-        "$value": 24
+        "$value": "{primitive/spacing/6}"
       },
       "control-gap-x": {
         "$type": "number",
-        "$value": 8
+        "$value": "{primitive/spacing/2}"
       },
       "control-gap-y": {
         "$type": "number",
-        "$value": 8
+        "$value": "{primitive/spacing/2}"
       },
       "card-padding": {
         "$type": "number",
-        "$value": 24
+        "$value": "{primitive/spacing/6}"
       },
       "content-padding": {
         "$type": "number",
-        "$value": 16
+        "$value": "{primitive/spacing/4}"
       },
       "menu-padding": {
         "$type": "number",
-        "$value": 4
+        "$value": "{primitive/spacing/1}"
       },
       "menu-item-px": {
         "$type": "number",
-        "$value": 8
+        "$value": "{primitive/spacing/2}"
       },
       "menu-item-py": {
         "$type": "number",
-        "$value": 8
+        "$value": "{primitive/spacing/2}"
       },
       "icon-size": {
         "$type": "number",
-        "$value": 16
+        "$value": "{primitive/spacing/4}"
       },
       "disabled-opacity": {
         "$type": "number",
@@ -2775,27 +2779,27 @@
       },
       "badge-height": {
         "$type": "number",
-        "$value": 20
+        "$value": "{primitive/spacing/5}"
       },
       "badge-px": {
         "$type": "number",
-        "$value": 12
+        "$value": "{primitive/spacing/3}"
       },
       "avatar-sm": {
         "$type": "number",
-        "$value": 32
+        "$value": "{primitive/spacing/8}"
       },
       "avatar-md": {
         "$type": "number",
-        "$value": 40
+        "$value": "{primitive/spacing/10}"
       },
       "avatar-lg": {
         "$type": "number",
-        "$value": 56
+        "$value": "{primitive/spacing/14}"
       },
       "sidebar-width": {
         "$type": "number",
-        "$value": 256
+        "$value": "{primitive/spacing/64}"
       }
     },
     "typography": {
@@ -2808,23 +2812,23 @@
       "data-table": {
         "row-height-sm": {
           "$type": "number",
-          "$value": 20
+          "$value": "{primitive/spacing/5}"
         },
         "row-height-md": {
           "$type": "number",
-          "$value": 24
+          "$value": "{primitive/spacing/6}"
         },
         "row-height-lg": {
           "$type": "number",
-          "$value": 32
+          "$value": "{primitive/spacing/8}"
         },
         "header-height": {
           "$type": "number",
-          "$value": 40
+          "$value": "{primitive/spacing/10}"
         },
         "cell-px": {
           "$type": "number",
-          "$value": 8
+          "$value": "{primitive/spacing/2}"
         },
         "cell-py": {
           "$type": "number",
@@ -2888,7 +2892,7 @@
       "calendar": {
         "cell-size": {
           "$type": "number",
-          "$value": 32
+          "$value": "{primitive/spacing/8}"
         }
       },
       "sonner": {

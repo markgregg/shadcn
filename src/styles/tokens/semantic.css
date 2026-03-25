@@ -160,31 +160,31 @@
   --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.1), 0 4px 6px -4px oklch(0 0 0 / 0.1);
 
-  /* Control sizes */
-  --size-control-sm: 1.5rem;
-  --size-control-md: 2rem;
-  --size-control-lg: 2.5rem;
-  --space-control-x-sm: 0.75rem;
-  --space-control-x-md: 1rem;
-  --space-control-x-lg: 1.5rem;
-  --space-gap-x-control: 0.5rem;
-  --space-gap-y-control: 0.5rem;
+  /* Control sizes (4px grid via --spacing) */
+  --size-control-sm: calc(var(--spacing) * 6);
+  --size-control-md: calc(var(--spacing) * 8);
+  --size-control-lg: calc(var(--spacing) * 10);
+  --space-control-x-sm: calc(var(--spacing) * 3);
+  --space-control-x-md: calc(var(--spacing) * 4);
+  --space-control-x-lg: calc(var(--spacing) * 6);
+  --space-gap-x-control: calc(var(--spacing) * 2);
+  --space-gap-y-control: calc(var(--spacing) * 2);
   --space-gap-control: var(--space-gap-x-control);
 
   /* Layout & spacing */
-  --space-card: 1.5rem;
-  --space-content: 1rem;
-  --space-menu: 0.25rem;
-  --space-menu-item-x: 0.5rem;
-  --space-menu-item-y: 0.5rem;
-  --size-badge: 1.25rem;
-  --space-badge-x: 0.75rem;
-  --size-icon: 1rem;
+  --space-card: calc(var(--spacing) * 6);
+  --space-content: calc(var(--spacing) * 4);
+  --space-menu: calc(var(--spacing) * 1);
+  --space-menu-item-x: calc(var(--spacing) * 2);
+  --space-menu-item-y: calc(var(--spacing) * 2);
+  --size-badge: calc(var(--spacing) * 5);
+  --space-badge-x: calc(var(--spacing) * 3);
+  --size-icon: calc(var(--spacing) * 4);
   --opacity-disabled: 0.5;
-  --size-avatar-sm: 2rem;
-  --size-avatar-md: 2.5rem;
-  --size-avatar-lg: 3.5rem;
-  --layout-rail-width: 16rem;
+  --size-avatar-sm: calc(var(--spacing) * 8);
+  --size-avatar-md: calc(var(--spacing) * 10);
+  --size-avatar-lg: calc(var(--spacing) * 14);
+  --layout-rail-width: calc(var(--spacing) * 64);
 
   /* Motion */
   --duration-fast: 100ms;

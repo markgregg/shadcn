@@ -8,8 +8,9 @@
  *
  * Primitives:
  *   - Color swatches: --primitive-* in primitives.css (+ white/black).
- *   - Spacing scale: steps in SPACING_SCALE_STEPS × SPACING_PX (4px); not read from CSS
- *     because semantic layout uses rem-based --space-* tokens instead of the Tailwind grid.
+ *   - Spacing scale: primitives.css defines --spacing (0.25rem = 4px at 16px root). Export emits
+ *     steps in SPACING_SCALE_STEPS × SPACING_PX; semantic/component sizes use calc(var(--spacing)*N)
+ *     so Figma can alias to {primitive/spacing/N}.
  *   - Radius / font sizes / weights / line-height: resolved from merged :root (semantic.css)
  *     where those variables exist, with numeric fallbacks if a var is missing.
  *
@@ -48,7 +49,7 @@ const SPACING_PX = 4; /* 0.25rem = 4px — matches Tailwind-style spacing scale 
 
 /** Matches primitive/spacing/* keys in buildPrimitives (step × SPACING_PX). */
 const SPACING_SCALE_STEPS = [
-  0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 20, 24, 64,
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 64,
 ];
 const SPACING_PRIMITIVE_KEYS = new Set(SPACING_SCALE_STEPS.map(String));
 
@@ -1773,6 +1774,7 @@ function main() {
 
   // Warn for :root vars not exported (skip known primitives / motion / component-only)
   function isKnownUnmappedToken(k) {
+    if (k === "--spacing") return true;
     if (/^--primitive-/.test(k)) return true;
     if (/^--color-primary-alpha-/.test(k)) return true;
     if (/^--shadow-/.test(k)) return true;

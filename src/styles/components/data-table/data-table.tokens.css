@@ -1,10 +1,10 @@
 :root {
-  --data-table-row-height-sm: 1.25rem;
-  --data-table-row-height-md: 1.5rem;
-  --data-table-row-height-lg: 2rem;
-  --data-table-header-height: 2.5rem;
+  --data-table-row-height-sm: calc(var(--spacing) * 5);
+  --data-table-row-height-md: calc(var(--spacing) * 6);
+  --data-table-row-height-lg: calc(var(--spacing) * 8);
+  --data-table-header-height: calc(var(--spacing) * 10);
   --data-table-row-divider-width: 0;
-  --data-table-cell-px: 0.5rem;
+  --data-table-cell-px: calc(var(--spacing) * 2);
   --data-table-cell-py: 0;
   --data-table-font-size: var(--font-size-data);
   --data-table-header-font-size: var(--font-size-xs);

@@ -1,19 +1,20 @@
 [data-density='super-high'] {
-  --size-control-sm: 1.25rem;
-  --size-control-md: 1.75rem;
+  /* On-grid: calc(var(--spacing) * N). Off-grid (6px gaps, 34px control-lg) stay literal. */
+  --size-control-sm: calc(var(--spacing) * 5);
+  --size-control-md: calc(var(--spacing) * 7);
   --size-control-lg: 2.125rem;
-  --space-control-x-sm: 0.5rem;
-  --space-control-x-md: 0.75rem;
-  --space-control-x-lg: 1rem;
+  --space-control-x-sm: calc(var(--spacing) * 2);
+  --space-control-x-md: calc(var(--spacing) * 3);
+  --space-control-x-lg: calc(var(--spacing) * 4);
   --space-gap-x-control: 0.375rem;
   --space-gap-y-control: 0.375rem;
   --space-gap-control: var(--space-gap-x-control);
-  --size-badge: 1rem;
+  --size-badge: calc(var(--spacing) * 4);
   --space-badge-x: 0.375rem;
-  --space-card: 1rem;
-  --data-table-row-height-sm: 1rem;
-  --data-table-row-height-md: 1.25rem;
-  --data-table-row-height-lg: 1.75rem;
+  --space-card: calc(var(--spacing) * 4);
+  --data-table-row-height-sm: calc(var(--spacing) * 4);
+  --data-table-row-height-md: calc(var(--spacing) * 5);
+  --data-table-row-height-lg: calc(var(--spacing) * 7);
   --data-table-cell-px: var(--space-control-x-sm);
   --data-table-font-size: 0.8125rem;
 }
