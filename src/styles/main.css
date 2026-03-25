@@ -1,6 +1,5 @@
 @import './layers.css';
 @import '../tokens.css';
-@import './legacy-aliases.css';
 @import './reset.css';
 @import './base.css';
 @import './components/accordion/accordion.css';

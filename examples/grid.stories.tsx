@@ -5,7 +5,7 @@ const Cell = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
       padding: '1rem',
-      background: 'var(--muted)',
+      background: 'var(--color-muted)',
       borderRadius: 6,
       fontSize: '0.875rem',
       textAlign: 'center',
@@ -100,7 +100,7 @@ export const WithOffset: Story = () => (
 
 export const Responsive: Story = () => (
   <div>
-    <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>
+    <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--color-muted-fg)' }}>
       Resize the window: stacks at xs, two-column at sm, three-column at md.
     </p>
     <Grid container spacing={2}>

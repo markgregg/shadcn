@@ -6,7 +6,7 @@ const Item = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
       padding: '0.75rem 1rem',
-      background: 'var(--muted)',
+      background: 'var(--color-muted)',
       borderRadius: 6,
       fontSize: '0.875rem',
     }}
@@ -48,7 +48,12 @@ export const WithDivider: Story = () => (
 )
 
 export const WithRowDivider: Story = () => (
-  <Stack direction="row" spacing={2} divider={<Separator orientation="vertical" style={{ height: 'auto' }} />} alignItems="stretch">
+  <Stack
+    direction="row"
+    spacing={2}
+    divider={<Separator orientation="vertical" style={{ height: 'auto' }} />}
+    alignItems="stretch"
+  >
     <Item>Alpha</Item>
     <Item>Beta</Item>
     <Item>Gamma</Item>

@@ -1,6 +1,6 @@
 .gallery-page {
   min-height: 100vh;
-  background: var(--background);
+  background: var(--color-bg);
 }
 
 .gallery-page-header {
@@ -11,8 +11,8 @@
   height: 7rem;
   align-items: center;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in oklab, var(--background) 95%, transparent);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-bg) 95%, transparent);
 }
 
 .gallery-page-header-inner {
@@ -24,16 +24,16 @@
 }
 
 .gallery-page-title {
-  font-size: var(--ds-text-2xl);
-  font-weight: var(--ds-font-bold);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .gallery-page-subtitle {
   margin-top: 0.25rem;
-  font-size: var(--ds-text-sm);
-  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted-fg);
 }
 
 .gallery-page-actions {
@@ -47,7 +47,7 @@
 }
 
 .gallery-section {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
   padding: 3rem 0;
 }
 
@@ -62,20 +62,20 @@
   position: sticky;
   top: 5rem;
   z-index: 10;
-  background: color-mix(in oklab, var(--background) 95%, transparent);
+  background: color-mix(in oklab, var(--color-bg) 95%, transparent);
 }
 
 .gallery-section-title {
-  font-size: var(--ds-text-2xl);
-  font-weight: var(--ds-font-semibold);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .gallery-section-description {
   margin-top: 0.25rem;
-  font-size: var(--ds-text-sm);
-  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted-fg);
 }
 
 .example-grid {
@@ -125,9 +125,9 @@
 }
 
 .example-subtitle {
-  font-size: var(--ds-text-sm);
-  font-weight: var(--ds-font-medium);
-  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-muted-fg);
 }
 
 .example-row-wrap {
@@ -171,25 +171,25 @@
 }
 
 .example-box {
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
 }
 
 .example-box-md {
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
 }
 
 .example-box-lg {
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
 }
 
 .example-panel {
   height: 16rem;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
 }
 
 .example-nav-list {
@@ -201,49 +201,49 @@
   display: block;
   border-radius: var(--radius-md);
   padding: 0.5rem 0.75rem;
-  font-size: var(--ds-text-sm);
+  font-size: var(--font-size-sm);
 }
 
 .example-nav-link:hover {
-  background: var(--accent);
+  background: var(--color-accent);
 }
 
 .example-text-xs-muted {
-  font-size: var(--ds-text-xs);
-  color: var(--muted-foreground);
+  font-size: var(--font-size-xs);
+  color: var(--color-muted-fg);
 }
 
 .example-text-sm {
-  font-size: var(--ds-text-sm);
+  font-size: var(--font-size-sm);
 }
 
 .example-text-sm-muted {
-  font-size: var(--ds-text-sm);
-  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+  color: var(--color-muted-fg);
 }
 
 .example-text-base {
-  font-size: var(--ds-text-base);
+  font-size: var(--font-size-base);
 }
 
 .example-text-lg-medium {
-  font-size: var(--ds-text-lg);
-  font-weight: var(--ds-font-medium);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
 }
 
 .example-text-xl-semibold {
-  font-size: var(--ds-text-xl);
-  font-weight: var(--ds-font-semibold);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .example-text-2xl-semibold {
-  font-size: var(--ds-text-2xl);
-  font-weight: var(--ds-font-semibold);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .example-text-3xl-bold {
-  font-size: var(--ds-text-3xl);
-  font-weight: var(--ds-font-bold);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
 }
 
 .example-leading-tight {
@@ -259,24 +259,24 @@
 }
 
 .example-font-normal {
-  font-weight: var(--ds-font-normal);
+  font-weight: var(--font-weight-regular);
 }
 
 .example-font-medium {
-  font-weight: var(--ds-font-medium);
+  font-weight: var(--font-weight-medium);
 }
 
 .example-font-semibold {
-  font-weight: var(--ds-font-semibold);
+  font-weight: var(--font-weight-semibold);
 }
 
 .example-font-bold {
-  font-weight: var(--ds-font-bold);
+  font-weight: var(--font-weight-bold);
 }
 
 .example-tabs-content {
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   padding: 1rem;
 }
 
@@ -304,7 +304,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--color-border);
 }
 
 .example-size-full {
@@ -314,7 +314,7 @@
 
 .example-aspect-muted {
   border-radius: var(--radius-md);
-  background: var(--muted);
+  background: var(--color-muted);
 }
 
 .example-center-fill-muted {
@@ -323,14 +323,14 @@
   height: 100%;
   align-items: center;
   justify-content: center;
-  color: var(--muted-foreground);
+  color: var(--color-muted-fg);
 }
 
 .example-scroll-area {
   height: 8rem;
   width: 12rem;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
 }
 
 .example-carousel {
@@ -344,13 +344,13 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--muted);
+  border: 1px solid var(--color-border);
+  background: var(--color-muted);
 }
 
 .example-text-4xl-semibold {
-  font-size: 2.25rem;
-  font-weight: var(--ds-font-semibold);
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .example-skeleton-line-lg {
@@ -374,7 +374,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: color-mix(in oklab, var(--muted) 50%, transparent);
+  background: color-mix(in oklab, var(--color-muted) 50%, transparent);
 }
 
 .example-resizable-pane-b {
@@ -383,7 +383,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: color-mix(in oklab, var(--muted) 30%, transparent);
+  background: color-mix(in oklab, var(--color-muted) 30%, transparent);
 }
 
 .example-button-justify-between {

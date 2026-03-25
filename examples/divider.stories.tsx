@@ -6,7 +6,15 @@ import { Divider } from '../src/components/divider'
 // ---------------------------------------------------------------------------
 
 const Box = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{ padding: '0.5rem 0.75rem', background: 'var(--muted)', borderRadius: 6, fontSize: '0.875rem', ...style }}>
+  <div
+    style={{
+      padding: '0.5rem 0.75rem',
+      background: 'var(--color-muted)',
+      borderRadius: 6,
+      fontSize: '0.875rem',
+      ...style,
+    }}
+  >
     {children}
   </div>
 )
@@ -41,7 +49,7 @@ export const Sizes: Story = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: 320 }}>
     {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
       <div key={size}>
-        <p style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginBottom: 8 }}>
+        <p style={{ fontSize: '0.75rem', color: 'var(--color-muted-fg)', marginBottom: 8 }}>
           size="{size}"
         </p>
         <Divider size={size} />
@@ -53,9 +61,18 @@ export const Sizes: Story = () => (
 export const VerticalSizes: Story = () => (
   <div style={{ display: 'flex', alignItems: 'center', height: 64, gap: 24 }}>
     {(['xs', 'sm', 'md', 'lg', 'xl'] as const).map((size) => (
-      <div key={size} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%' }}>
+      <div
+        key={size}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 4,
+          height: '100%',
+        }}
+      >
         <Divider orientation="vertical" size={size} />
-        <span style={{ fontSize: '0.625rem', color: 'var(--muted-foreground)' }}>{size}</span>
+        <span style={{ fontSize: '0.625rem', color: 'var(--color-muted-fg)' }}>{size}</span>
       </div>
     ))}
   </div>
@@ -66,7 +83,14 @@ export const VerticalSizes: Story = () => (
 // ---------------------------------------------------------------------------
 
 export const FullWidth: Story = () => (
-  <div style={{ width: 320, border: '1px dashed var(--border)', borderRadius: 8, padding: '0.5rem 0' }}>
+  <div
+    style={{
+      width: 320,
+      border: '1px dashed var(--color-border)',
+      borderRadius: 8,
+      padding: '0.5rem 0',
+    }}
+  >
     <Box>Content</Box>
     <Divider variant="fullWidth" style={{ margin: '0.5rem 0' }} />
     <Box>Content</Box>
@@ -74,7 +98,14 @@ export const FullWidth: Story = () => (
 )
 
 export const Inset: Story = () => (
-  <div style={{ width: 320, border: '1px dashed var(--border)', borderRadius: 8, padding: '0.5rem 0' }}>
+  <div
+    style={{
+      width: 320,
+      border: '1px dashed var(--color-border)',
+      borderRadius: 8,
+      padding: '0.5rem 0',
+    }}
+  >
     <Box>Content</Box>
     <Divider variant="inset" style={{ margin: '0.5rem 0' }} />
     <Box>Content</Box>
@@ -82,7 +113,14 @@ export const Inset: Story = () => (
 )
 
 export const Middle: Story = () => (
-  <div style={{ width: 320, border: '1px dashed var(--border)', borderRadius: 8, padding: '0.5rem 0' }}>
+  <div
+    style={{
+      width: 320,
+      border: '1px dashed var(--color-border)',
+      borderRadius: 8,
+      padding: '0.5rem 0',
+    }}
+  >
     <Box>Content</Box>
     <Divider variant="middle" style={{ margin: '0.5rem 0' }} />
     <Box>Content</Box>

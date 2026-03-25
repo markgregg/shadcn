@@ -241,7 +241,7 @@
     "lint": "eslint src examples --ext .ts,.tsx",
     "lint:scripts": "eslint scripts --ext .js,.cjs",
     "lint:fix": "eslint src examples --ext .ts,.tsx --fix",
-    "lint:scripts:fix": "eslint scripts --ext .js --fix",
+    "lint:scripts:fix": "eslint scripts --ext .js,.cjs --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"examples/**/*.{ts,tsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" \"examples/**/*.{ts,tsx,css,json}\"",
     "changeset": "changeset",

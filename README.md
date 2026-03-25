@@ -15,7 +15,10 @@ A Vite-based React component library with pure CSS theming, TypeScript declarati
 ## Project Structure
 
 - `src/components` — all exported components
-- `src/styles` — `tokens.css`, `global.css`, `components.css`
+- `src/tokens.css` — token barrel (primitives → semantic → component maps)
+- `src/styles/main.css` — single entry: layers, reset, base, `components/<name>/`, density, app shell
+- `src/styles/tokens/` — `primitives.css`, `semantic.css`, `component-tokens.css`
+- `src/styles/components/<name>/` — per-component `.css` / `.tokens.css`
 - `src/index.ts` — public exports
 - `examples` — Ladle stories and migrated gallery examples
 - `.ladle` — Ladle global provider/config
@@ -28,7 +31,7 @@ A Vite-based React component library with pure CSS theming, TypeScript declarati
 - `npm run build` — build component library
 - `npm run build:ladle` — build Ladle static preview
 - `npm run lint` — lint `src` and `examples`
-- `npm run lint:scripts` — lint `scripts/*.js`
+- `npm run lint:scripts` — lint `scripts/*.{js,cjs}`
 - `npm run typecheck` — run TypeScript type checks
 - `npm run test` — run Vitest test suite
 - `npm run test:coverage` — run tests with coverage thresholds
