@@ -314,8 +314,10 @@ describe('option coverage', () => {
     )
 
     expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
     fireEvent.click(screen.getByRole('button', { name: 'Toggle theme' }))
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
   })
 
   it('covers dialog controlled and uncontrolled modes', () => {

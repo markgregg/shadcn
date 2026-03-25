@@ -12,12 +12,13 @@ export function ThemeToggle() {
     <Button
       variant="outline"
       size="icon"
+      className="gallery-theme-toggle"
       onClick={toggleTheme}
       aria-label="Toggle theme"
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
     >
-      <SunIcon className="size-4 sun-icon" />
-      <MoonIcon className="absolute size-4 moon-icon" />
+      <SunIcon className="gallery-theme-icon gallery-theme-icon--sun" />
+      <MoonIcon className="gallery-theme-icon gallery-theme-icon--moon" />
     </Button>
   )
 }

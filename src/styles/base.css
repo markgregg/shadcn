@@ -4,10 +4,15 @@
   }
 
   html {
+    color-scheme: light;
     font-family: var(--font-sans);
     font-size: var(--font-size-base);
     color: var(--color-fg);
     background-color: var(--color-bg);
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   h1 {

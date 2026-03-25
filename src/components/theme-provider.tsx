@@ -58,6 +58,23 @@ function applyDensityClass(density: Density) {
   document.documentElement.setAttribute('data-density', density)
 }
 
+/** Apply immediately during state init so first paint uses correct CSS variables (`.dark` / `data-density`). */
+function initThemeState(defaultTheme: Theme | 'system', storageKey: string): Theme {
+  const next = resolveTheme(defaultTheme, storageKey)
+  if (typeof document !== 'undefined') {
+    applyThemeClass(next)
+  }
+  return next
+}
+
+function initDensityState(defaultDensity: Density, densityStorageKey: string): Density {
+  const next = resolveDensity(defaultDensity, densityStorageKey)
+  if (typeof document !== 'undefined') {
+    applyDensityClass(next)
+  }
+  return next
+}
+
 export function useTheme() {
   const context = React.useContext(ThemeContext)
   if (!context) {
@@ -73,9 +90,11 @@ export function ThemeProvider({
   storageKey = 'signal-theme',
   densityStorageKey = 'signal-density',
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = React.useState<Theme>(() => resolveTheme(defaultTheme, storageKey))
+  const [theme, setThemeState] = React.useState<Theme>(() =>
+    initThemeState(defaultTheme, storageKey)
+  )
   const [density, setDensityState] = React.useState<Density>(() =>
-    resolveDensity(defaultDensity, densityStorageKey)
+    initDensityState(defaultDensity, densityStorageKey)
   )
 
   const setTheme = React.useCallback(
