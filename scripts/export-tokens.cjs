@@ -1,463 +1,1716 @@
 #!/usr/bin/env node
+/**
+ * Signal — export DTCG-style JSON for Figma Variables (native import).
+ * Writes tokens/light.json + tokens/dark.json from CSS custom properties.
+ *
+ * Source list must stay aligned with src/styles/tokens/component-tokens.css
+ * (same *.tokens.css files, plus primitives + semantic).
+ */
 
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 
-const ROOT = path.resolve(__dirname, '..')
-const OUTPUT_FILE = path.join(ROOT, 'tokens', 'variables-pro.json')
-
+const ROOT = path.resolve(__dirname, "..");
+const TOKENS_CSS = path.join(ROOT, "src", "tokens.css");
+/** Parsed for :root and dark overrides (:is(html.dark, …) blocks contain `.dark`). */
 const TOKEN_SOURCE_FILES = [
-  path.join(ROOT, 'src', 'styles', 'tokens', 'primitives.css'),
-  path.join(ROOT, 'src', 'styles', 'tokens', 'semantic.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'data-table', 'data-table.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'table', 'table.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'sidebar', 'sidebar.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'dialog', 'dialog.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'drawer', 'drawer.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'alert-dialog', 'alert-dialog.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'sheet', 'sheet.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'slider', 'slider.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'switch', 'switch.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'input', 'input.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'calendar', 'calendar.tokens.css'),
-  path.join(ROOT, 'src', 'styles', 'components', 'sonner', 'sonner.tokens.css'),
-]
+  path.join(ROOT, "src", "styles", "tokens", "primitives.css"),
+  path.join(ROOT, "src", "styles", "tokens", "semantic.css"),
+  /* Component maps so data-table / table sizing tokens resolve for export */
+  path.join(ROOT, "src", "styles", "components", "data-table", "data-table.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "table", "table.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "sidebar", "sidebar.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "dialog", "dialog.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "drawer", "drawer.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "alert-dialog", "alert-dialog.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "sheet", "sheet.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "slider", "slider.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "switch", "switch.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "input", "input.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "calendar", "calendar.tokens.css"),
+  path.join(ROOT, "src", "styles", "components", "sonner", "sonner.tokens.css"),
+];
+const TOKENS_DIR = path.join(ROOT, "tokens");
+const OUTPUT_LIGHT = path.join(TOKENS_DIR, "light.json");
+const OUTPUT_DARK = path.join(TOKENS_DIR, "dark.json");
 
-/** Extract CSS custom properties from a block. Returns { name: value } */
-function extractVars(cssBlock) {
-  const vars = {}
-  const regex = /--([a-zA-Z0-9-]+)\s*:\s*([^;]+);/g
-  let m
-  while ((m = regex.exec(cssBlock)) !== null) {
-    vars[`--${m[1]}`] = m[2].trim()
+const SPACING_PX = 4; /* 0.25rem = 4px */
+
+/** Matches primitive/spacing/* keys in buildPrimitives (step × base px). */
+const SPACING_SCALE_STEPS = [
+  0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 20, 24, 64,
+];
+const SPACING_PRIMITIVE_KEYS = new Set(SPACING_SCALE_STEPS.map(String));
+
+/** Matches primitive/radius/* keys in buildPrimitives */
+const RADIUS_PRIMITIVE_KEYS = new Set([
+  "none",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+  "2xl",
+  "3xl",
+  "full",
+]);
+
+/** Mode keys for Figma native Variables import. */
+const M = { L: "Light", D: "Dark" };
+
+/** Scopes accepted by Figma Variables import; unknown scopes can break import. */
+const FIGMA_SCOPES = new Set([
+  "ALL_FILLS",
+  "FRAME_FILL",
+  "SHAPE_FILL",
+  "TEXT_FILL",
+  "STROKE_COLOR",
+  "CORNER_RADIUS",
+  "WIDTH_HEIGHT",
+  "GAP",
+  "FONT_SIZE",
+  "FONT_WEIGHT",
+  "FONT_FAMILY",
+  "LINE_HEIGHT",
+  "LETTER_SPACING",
+  "PARAGRAPH_SPACING",
+  "OPACITY",
+  "EFFECT_FLOAT",
+]);
+
+function modePair(lightVal, darkVal) {
+  return { [M.L]: lightVal, [M.D]: darkVal };
+}
+
+/** Convert rgba/rgb to #RRGGBBAA for solid fills (Figma import rejects raw rgba() strings). */
+function normalizeColorForFigma(v) {
+  if (typeof v !== "string") return v;
+  const s = v.trim().replace(/\s+/g, "");
+  const rgba = s.match(
+    /^rgba\((\d+),(\d+),(\d+),([\d.]+)\)$/i
+  );
+  if (rgba) {
+    const r = Math.min(255, Math.max(0, parseInt(rgba[1], 10)));
+    const g = Math.min(255, Math.max(0, parseInt(rgba[2], 10)));
+    const b = Math.min(255, Math.max(0, parseInt(rgba[3], 10)));
+    const a = Math.min(
+      255,
+      Math.max(0, Math.round(parseFloat(rgba[4]) * 255))
+    );
+    return `#${[r, g, b, a]
+      .map((x) => x.toString(16).padStart(2, "0"))
+      .join("")}`;
   }
-  return vars
-}
-
-/** Extract every `:root { … }` block in order and merge (later overrides earlier). */
-function mergeBlocks(css, selectorPrefix) {
-  const merged = {}
-  let pos = 0
-  while (pos < css.length) {
-    const i = css.indexOf(selectorPrefix, pos)
-    if (i === -1) break
-    const openBrace = selectorPrefix.endsWith('{') ? i + selectorPrefix.length - 1 : css.indexOf('{', i)
-    if (openBrace === -1) break
-    let depth = 1
-    let p = openBrace + 1
-    while (p < css.length && depth > 0) {
-      if (css[p] === '{') depth++
-      else if (css[p] === '}') depth--
-      p++
-    }
-    Object.assign(merged, extractVars(css.slice(openBrace + 1, p - 1)))
-    pos = p
+  const rgb = s.match(/^rgb\((\d+),(\d+),(\d+)\)$/i);
+  if (rgb) {
+    const r = Math.min(255, Math.max(0, parseInt(rgb[1], 10)));
+    const g = Math.min(255, Math.max(0, parseInt(rgb[2], 10)));
+    const b = Math.min(255, Math.max(0, parseInt(rgb[3], 10)));
+    return `#${[r, g, b, 255]
+      .map((x) => x.toString(16).padStart(2, "0"))
+      .join("")}`;
   }
-  return merged
+  return v;
 }
 
-function mergeAllRoots(files) {
-  const merged = {}
-  for (const file of files) {
-    if (!fs.existsSync(file)) continue
-    const css = fs.readFileSync(file, 'utf8')
-    Object.assign(merged, mergeBlocks(css, ':root {'))
-  }
-  return merged
+function figmaScopes(scopes) {
+  const filtered = scopes.filter((s) => FIGMA_SCOPES.has(s));
+  return filtered.length > 0 ? filtered : ["ALL_FILLS"];
 }
 
-function mergeAllDark(files) {
-  const merged = {}
-  for (const file of files) {
-    if (!fs.existsSync(file)) continue
-    const css = fs.readFileSync(file, 'utf8')
-    Object.assign(merged, mergeBlocks(css, '.dark {'))
-  }
-  return merged
-}
-
-/** Map Signal `--color-*` names to legacy keys expected by `buildLightMode`. */
-function toLegacyVars(vars) {
-  const v = { ...vars }
-  const pairs = [
-    ['--background', '--color-bg'],
-    ['--foreground', '--color-fg'],
-    ['--card', '--color-card'],
-    ['--card-foreground', '--color-card-fg'],
-    ['--popover', '--color-popover'],
-    ['--popover-foreground', '--color-popover-fg'],
-    ['--primary', '--color-primary'],
-    ['--primary-foreground', '--color-primary-fg'],
-    ['--secondary', '--color-secondary'],
-    ['--secondary-foreground', '--color-secondary-fg'],
-    ['--secondary-hover', '--color-secondary-hover'],
-    ['--muted', '--color-muted'],
-    ['--muted-foreground', '--color-muted-fg'],
-    ['--accent', '--color-accent'],
-    ['--accent-foreground', '--color-accent-fg'],
-    ['--link', '--color-link'],
-    ['--link-foreground', '--color-link-fg'],
-    ['--destructive', '--color-destructive'],
-    ['--destructive-foreground', '--color-destructive-fg'],
-    ['--success', '--color-success'],
-    ['--success-foreground', '--color-success-fg'],
-    ['--warning', '--color-warning'],
-    ['--warning-foreground', '--color-warning-fg'],
-    ['--info', '--color-info'],
-    ['--info-foreground', '--color-info-fg'],
-    ['--press', '--color-press'],
-    ['--press-foreground', '--color-press-fg'],
-    ['--selection', '--color-selection'],
-    ['--selection-foreground', '--color-selection-fg'],
-    ['--border', '--color-border'],
-    ['--input', '--color-input-border'],
-    ['--ring', '--color-ring'],
-    ['--data-primary', '--color-data-primary'],
-    ['--data-secondary', '--color-data-secondary'],
-    ['--data-currency', '--color-data-currency'],
-    ['--data-entity', '--color-data-entity'],
-    ['--data-identifier', '--color-data-identifier'],
-    ['--data-category', '--color-data-category'],
-    ['--data-datetime', '--color-data-datetime'],
-    ['--data-status-positive', '--color-data-status-positive'],
-    ['--data-status-negative', '--color-data-status-negative'],
-    ['--data-status-warning', '--color-data-status-warning'],
-    ['--data-status-neutral', '--color-data-status-neutral'],
-    ['--data-value-positive', '--color-data-value-positive'],
-    ['--data-value-negative', '--color-data-value-negative'],
-    ['--data-value-neutral', '--color-data-value-neutral'],
-  ]
-  for (const [legacy, sem] of pairs) {
-    if (v[sem] != null && v[legacy] == null) v[legacy] = v[sem]
-  }
-
-  if (v['--size-control-sm']) v['--control-height-sm'] = v['--size-control-sm']
-  if (v['--size-control-md']) v['--control-height-md'] = v['--size-control-md']
-  if (v['--size-control-lg']) v['--control-height-lg'] = v['--size-control-lg']
-  if (v['--space-control-x-sm']) v['--control-px-sm'] = v['--space-control-x-sm']
-  if (v['--space-control-x-md']) v['--control-px-md'] = v['--space-control-x-md']
-  if (v['--space-control-x-lg']) v['--control-px-lg'] = v['--space-control-x-lg']
-  if (v['--space-gap-x-control']) v['--control-gap-x'] = v['--space-gap-x-control']
-  if (v['--space-gap-y-control']) v['--control-gap-y'] = v['--space-gap-y-control']
-  if (v['--space-card']) v['--card-padding'] = v['--space-card']
-  if (v['--space-content']) v['--content-padding'] = v['--space-content']
-  if (v['--space-menu']) v['--menu-padding'] = v['--space-menu']
-  if (v['--space-menu-item-x']) v['--menu-item-px'] = v['--space-menu-item-x']
-  if (v['--space-menu-item-y']) v['--menu-item-py'] = v['--space-menu-item-y']
-  if (v['--size-icon']) v['--icon-size'] = v['--size-icon']
-  if (v['--size-badge']) v['--badge-height'] = v['--size-badge']
-  if (v['--space-badge-x']) v['--badge-px'] = v['--space-badge-x']
-  if (v['--size-avatar-sm']) v['--avatar-size-sm'] = v['--size-avatar-sm']
-  if (v['--size-avatar-md']) v['--avatar-size-md'] = v['--size-avatar-md']
-  if (v['--size-avatar-lg']) v['--avatar-size-lg'] = v['--size-avatar-lg']
-  if (v['--opacity-disabled']) v['--disabled-opacity'] = String(v['--opacity-disabled'])
-
-  return v
-}
-
-function remToPx(value) {
-  const match = String(value).match(/^([\d.]+)rem$/)
-  if (match) return Math.round(parseFloat(match[1]) * 16)
-  const pxMatch = String(value).match(/^([\d.]+)px$/)
-  if (pxMatch) return parseFloat(pxMatch[1])
-  return null
-}
-
-function spacingCalcToPx(value) {
-  const m = String(value)
+/** ------------------------------------------------------------------ */
+/** OKLCH → sRGB → hex (CSS Color 4 / Björn Ottosson) */
+/** ------------------------------------------------------------------ */
+function oklchToHex(oklchStr) {
+  const m = String(oklchStr)
     .trim()
-    .match(/^calc\(var\(--spacing\)\s*\*\s*([\d.]+)\)$/i)
-  if (!m) return null
-  return Math.round(parseFloat(m[1]) * 0.25 * 16)
+    .match(/^oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+)\s*\)$/i);
+  if (!m) return null;
+  let L = parseFloat(m[1]);
+  if (m[1].includes("%")) L /= 100;
+  const C = parseFloat(m[2]);
+  const h = parseFloat(m[3]);
+  const hr = (h / 360) * 2 * Math.PI;
+  const a = C * Math.cos(hr);
+  const b = C * Math.sin(hr);
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+  const l = l_ ** 3;
+  const m3 = m_ ** 3;
+  const s = s_ ** 3;
+  let r = 4.0767416621 * l - 3.3077115913 * m3 + 0.2309699292 * s;
+  let g = -1.2684380046 * l + 2.6097574011 * m3 - 0.3413193965 * s;
+  let bl = -0.0041960863 * l - 0.7034186147 * m3 + 1.707614701 * s;
+  const lin2srgb = (c) =>
+    c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+  const clip = (c) => {
+    const v = lin2srgb(c);
+    return Math.max(0, Math.min(1, v));
+  };
+  const R = Math.round(255 * clip(r));
+  const G = Math.round(255 * clip(g));
+  const B = Math.round(255 * clip(bl));
+  return `#${[R, G, B].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
 }
 
-function toExportPx(value, allVars, depth = 0) {
-  if (depth > 8) return null
-  const v = String(value).trim()
-  const fromSpacing = spacingCalcToPx(v)
-  if (fromSpacing !== null) return fromSpacing
-  const literal = remToPx(v)
-  if (literal !== null) return literal
-  const varM = v.match(/^var\(--([a-zA-Z0-9-]+)\)$/)
-  if (varM && allVars[`--${varM[1]}`]) {
-    return toExportPx(allVars[`--${varM[1]}`], allVars, depth + 1)
+function colorValueToHex(value, paletteHexByVar) {
+  const v = String(value).trim();
+  if (/^#[0-9a-f]{3,8}$/i.test(v)) {
+    if (v.length === 4) {
+      return `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}`.toLowerCase();
+    }
+    return v.toLowerCase();
   }
-  return null
+  const ok = v.match(/^oklch\(/i);
+  if (ok) return oklchToHex(v);
+  const varM = v.match(/^var\(--(color-[a-z0-9-]+)\)$/i);
+  if (varM && paletteHexByVar[`--${varM[1].toLowerCase()}`]) {
+    return paletteHexByVar[`--${varM[1].toLowerCase()}`];
+  }
+  const primM = v.match(/^var\(--(primitive-[a-z0-9-]+)\)$/i);
+  if (primM && paletteHexByVar[`--${primM[1].toLowerCase()}`]) {
+    return paletteHexByVar[`--${primM[1].toLowerCase()}`];
+  }
+  if (/^rgba?\(/i.test(v)) return v.replace(/\s+/g, "");
+  return null;
 }
 
-function isColorValue(value) {
-  if (!value) return false
-  const s = String(value)
-  return (
-    s.startsWith('var(') ||
-    s.startsWith('oklch') ||
-    s.startsWith('rgba') ||
-    s.startsWith('rgb(') ||
-    s.startsWith('#') ||
-    s.startsWith('color-mix') ||
-    s === 'transparent'
-  )
+/** ------------------------------------------------------------------ */
+/** CSS block extraction */
+/** ------------------------------------------------------------------ */
+function loadMergedTokensCss() {
+  const parts = [];
+  for (const f of TOKEN_SOURCE_FILES) {
+    if (!fs.existsSync(f)) {
+      throw new Error(`Missing token source: ${f}`);
+    }
+    parts.push(fs.readFileSync(f, "utf8"));
+  }
+  return parts.join("\n\n");
 }
 
-/** Build Light Mode export */
-function buildLightMode(vars) {
-  const mode = {}
+/** Merge custom properties from every `:root { … }` block (primitives + semantic files). */
+function extractAllRootVars(css) {
+  const merged = {};
+  const needle = ":root";
+  let from = 0;
+  while (from < css.length) {
+    const start = css.indexOf(needle, from);
+    if (start === -1) break;
+    const brace = css.indexOf("{", start);
+    if (brace === -1 || brace > start + needle.length + 8) {
+      from = start + needle.length;
+      continue;
+    }
+    let depth = 1;
+    let pos = brace + 1;
+    while (pos < css.length && depth > 0) {
+      if (css[pos] === "{") depth++;
+      else if (css[pos] === "}") depth--;
+      pos++;
+    }
+    const block = css.slice(brace + 1, pos - 1);
+    Object.assign(merged, extractVars(block));
+    from = pos;
+  }
+  return merged;
+}
 
-  const fillOnlyKeys = new Set([
-    'background',
-    'foreground',
-    'primary-foreground',
-    'secondary-foreground',
-    'muted-foreground',
-    'accent-foreground',
-    'destructive-foreground',
-    'success-foreground',
-    'warning-foreground',
-    'info-foreground',
-    'popover-foreground',
-    'card-foreground',
-    'sidebar-foreground',
-    'link-foreground',
-    'press-foreground',
-    'selection-foreground',
-  ])
-  const strokeOnlyKeys = new Set(['border', 'input', 'ring'])
+/**
+ * Merge dark-theme custom properties from semantic + component token files.
+ * Matches any `{ … }` block whose selector contains `.dark` (including
+ * `:is(html.dark, html[data-theme='dark'])`).
+ */
+function extractAllDarkVars(css) {
+  const merged = {};
+  const needle = ".dark";
+  let from = 0;
+  while (from < css.length) {
+    const start = css.indexOf(needle, from);
+    if (start === -1) break;
+    const brace = css.indexOf("{", start);
+    if (brace === -1) break;
+    let depth = 1;
+    let pos = brace + 1;
+    while (pos < css.length && depth > 0) {
+      if (css[pos] === "{") depth++;
+      else if (css[pos] === "}") depth--;
+      pos++;
+    }
+    const block = css.slice(brace + 1, pos - 1);
+    Object.assign(merged, extractVars(block));
+    from = pos;
+  }
+  return merged;
+}
 
-  const colorKeys = [
-    'background',
-    'foreground',
-    'card',
-    'card-foreground',
-    'popover',
-    'popover-foreground',
-    'primary',
-    'primary-foreground',
-    'secondary',
-    'secondary-foreground',
-    'secondary-hover',
-    'muted',
-    'muted-foreground',
-    'accent',
-    'accent-foreground',
-    'link',
-    'link-foreground',
-    'destructive',
-    'destructive-foreground',
-    'success',
-    'success-foreground',
-    'warning',
-    'warning-foreground',
-    'info',
-    'info-foreground',
-    'press',
-    'press-foreground',
-    'selection',
-    'selection-foreground',
-    'border',
-    'input',
-    'ring',
-    'chart-1',
-    'chart-2',
-    'chart-3',
-    'chart-4',
-    'chart-5',
-    'chart-6',
-    'chart-7',
-    'chart-8',
-    'chart-9',
-    'chart-10',
-    'chart-11',
-    'chart-12',
-    'chart-13',
-    'chart-14',
-    'sidebar',
-    'sidebar-foreground',
-    'data-primary',
-    'data-secondary',
-    'data-currency',
-    'data-entity',
-    'data-identifier',
-    'data-category',
-    'data-datetime',
-    'data-status-positive',
-    'data-status-negative',
-    'data-status-warning',
-    'data-status-neutral',
-    'data-value-positive',
-    'data-value-negative',
-    'data-value-neutral',
-  ]
+function extractVars(cssBlock) {
+  const vars = {};
+  const re = /--([a-zA-Z0-9-]+)\s*:\s*([^;]+);/g;
+  let m;
+  while ((m = re.exec(cssBlock)) !== null) {
+    vars[`--${m[1]}`] = m[2].trim();
+  }
+  return vars;
+}
 
-  mode.colors = {}
-  for (const key of colorKeys) {
-    const value = vars[`--${key}`]
-    if (!value) continue
-    let scopes
-    if (strokeOnlyKeys.has(key)) scopes = ['STROKE_COLOR']
-    else if (fillOnlyKeys.has(key)) scopes = ['ALL_FILLS']
-    else scopes = ['ALL_FILLS', 'STROKE_COLOR']
-    mode.colors[key] = { $type: 'color', $value: value, $scopes: scopes }
+/** ------------------------------------------------------------------ */
+/** Optional Tailwind @theme palette (unused when empty) + tokens.css primitives */
+/** ------------------------------------------------------------------ */
+const PALETTE_FAMILIES = new Set([
+  "slate",
+  "gray",
+  "zinc",
+  "neutral",
+  "stone",
+  "red",
+  "orange",
+  "amber",
+  "yellow",
+  "lime",
+  "green",
+  "emerald",
+  "teal",
+  "cyan",
+  "sky",
+  "blue",
+  "indigo",
+  "violet",
+  "purple",
+  "fuchsia",
+  "pink",
+  "rose",
+]);
+
+function buildPaletteFromTheme(themeVars) {
+  const hexByVar = {};
+  const primitiveColor = {};
+
+  for (const [name, raw] of Object.entries(themeVars)) {
+    if (!name.startsWith("--color-")) continue;
+    const key = name.toLowerCase();
+    if (name === "--color-black") {
+      hexByVar[key] = "#000000";
+      continue;
+    }
+    if (name === "--color-white") {
+      hexByVar[key] = "#ffffff";
+      continue;
+    }
+    const rest = name.slice("--color-".length).toLowerCase();
+    const parts = rest.split("-");
+    const shade = parts[parts.length - 1];
+    const family = parts.slice(0, -1).join("-");
+    if (!/^\d+$/.test(shade)) continue;
+    if (!PALETTE_FAMILIES.has(family)) continue;
+
+    const hex = colorValueToHex(raw, hexByVar);
+    if (!hex) continue;
+    hexByVar[key] = hex;
+    if (!primitiveColor[family]) primitiveColor[family] = {};
+    primitiveColor[family][shade] = hex;
   }
 
-  mode.radius = {}
-  const radiusMd = vars['--radius-md']
-  if (radiusMd) {
-    const px = remToPx(radiusMd)
-    if (px !== null) mode.radius.base = { $type: 'float', $value: px, $scopes: ['CORNER_RADIUS'] }
+  hexByVar["--color-white"] = "#ffffff";
+  hexByVar["--color-black"] = "#000000";
+
+  return { hexByVar, primitiveColor };
+}
+
+/**
+ * Fill --color-* + primitive Figma tree from tokens.css --primitive-{family}-{shade}
+ * (replaces Tailwind theme.css @theme default palette).
+ */
+function mergePaletteFromPrimitiveVars(ctx, hexByVar, primitiveColor) {
+  for (const [name, raw] of Object.entries(ctx)) {
+    if (name === "--primitive-black" || name === "--primitive-white") {
+      const hx = colorValueToHex(String(raw).trim(), hexByVar);
+      if (hx) hexByVar[name.toLowerCase()] = hx;
+    }
   }
-  for (const key of ['container', 'control', 'inset', 'pill']) {
-    const val = vars[`--radius-${key}`]
-    if (!val) continue
-    const px = toExportPx(val, vars)
-    if (px !== null) {
-      mode.radius[key] = { $type: 'float', $value: px, $scopes: ['CORNER_RADIUS'] }
+
+  const re = /^--primitive-([a-z]+)-(\d+)$/i;
+  for (const [name, raw] of Object.entries(ctx)) {
+    const m = name.match(re);
+    if (!m) continue;
+    const family = m[1].toLowerCase();
+    const shade = m[2];
+    if (!PALETTE_FAMILIES.has(family)) continue;
+    const hx = colorValueToHex(String(raw).trim(), hexByVar);
+    if (!hx) continue;
+    const lname = name.toLowerCase();
+    hexByVar[lname] = hx;
+    hexByVar[`--color-${family}-${shade}`.toLowerCase()] = hx;
+    if (!primitiveColor[family]) primitiveColor[family] = {};
+    primitiveColor[family][shade] = hx;
+  }
+}
+
+/** ------------------------------------------------------------------ */
+/** Evaluation */
+/** ------------------------------------------------------------------ */
+function remToPxNum(v) {
+  const m = String(v).match(/^([\d.]+)rem$/i);
+  if (m) return Math.round(parseFloat(m[1]) * 16);
+  const px = String(v).match(/^([\d.]+)px$/i);
+  if (px) return Math.round(parseFloat(px[1]));
+  return null;
+}
+
+function spacingCalcToPx(v) {
+  const s = String(v).trim();
+  const m = s.match(/^calc\(var\(--spacing\)\s*\*\s*([\d.]+)\)$/i);
+  if (m) return Math.round(parseFloat(m[1]) * SPACING_PX);
+  return null;
+}
+
+/** Tailwind v4 --spacing(N) → same as calc(var(--spacing) * N) */
+function spacingFunctionToPx(v) {
+  const m = String(v).trim().match(/^--spacing\(\s*(\d+)\s*\)$/i);
+  if (!m) return null;
+  const k = m[1];
+  if (!SPACING_PRIMITIVE_KEYS.has(k)) return null;
+  return parseInt(k, 10) * SPACING_PX;
+}
+
+/** Resolve legacy theme('spacing.N') / theme('radius.*') / theme('fontSize.*') / theme('fontWeight.*') using merged ctx (prefer --spacing(N) + var(--text-*) in CSS). */
+function evalThemeNumeric(s, ctx) {
+  const t = String(s).trim();
+  const sp =
+    t.match(/^theme\(\s*['"]spacing\.(\d+)['"]\s*\)$/i) ||
+    t.match(/^theme\(\s*spacing\.(\d+)\s*\)$/i);
+  if (sp) {
+    const k = sp[1];
+    if (!SPACING_PRIMITIVE_KEYS.has(k)) return null;
+    return parseInt(k, 10) * SPACING_PX;
+  }
+  const rad =
+    t.match(/^theme\(\s*['"]radius\.([a-z0-9]+)['"]\s*\)$/i) ||
+    t.match(/^theme\(\s*radius\.([a-z0-9]+)\s*\)$/i);
+  if (rad) {
+    const k = rad[1].toLowerCase();
+    if (k === "none") return 0;
+    if (k === "full") return 9999;
+    const vn = `--radius-${k}`;
+    const raw = ctx[vn];
+    if (raw === undefined) return null;
+    return remToPxNum(String(raw).trim());
+  }
+  const fs =
+    t.match(/^theme\(\s*['"]fontSize\.([a-z0-9]+)['"]\s*\)$/i) ||
+    t.match(/^theme\(\s*fontSize\.([a-z0-9]+)\s*\)$/i);
+  if (fs) {
+    const k = fs[1].toLowerCase();
+    const vn = `--text-${k}`;
+    const raw = ctx[vn];
+    if (raw === undefined) return null;
+    const first = String(raw).trim().split(/\s+/)[0];
+    return remToPxNum(first);
+  }
+  const fw =
+    t.match(/^theme\(\s*['"]fontWeight\.([a-z]+)['"]\s*\)$/i) ||
+    t.match(/^theme\(\s*fontWeight\.([a-z]+)\s*\)$/i);
+  if (fw) {
+    const k = fw[1].toLowerCase();
+    const vn = `--font-weight-${k}`;
+    const raw = ctx[vn];
+    if (raw === undefined) return null;
+    const n = parseFloat(String(raw).trim());
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+function evalCalcNumeric(expr, ctx, depth = 0) {
+  if (depth > 16) return null;
+  let e = String(expr)
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\u2212/g, "-");
+
+  const spacingPx = spacingCalcToPx(e);
+  if (spacingPx !== null) return spacingPx;
+
+  const spacingFnPx = spacingFunctionToPx(e);
+  if (spacingFnPx !== null) return spacingFnPx;
+
+  const themeN = evalThemeNumeric(e, ctx);
+  if (themeN !== null) return themeN;
+
+  const remPx = remToPxNum(e);
+  if (remPx !== null) return remPx;
+
+  const pxLit = e.match(/^(-?[\d.]+)px$/i);
+  if (pxLit) return Math.round(parseFloat(pxLit[1]));
+
+  const numLit = e.match(/^(-?[\d.]+)$/);
+  if (numLit) return parseFloat(numLit[1]);
+
+  // calc(var(--radius-md|sm|…) ± Npx) — stepped scale in tokens.css
+  const radiusStepCalc = e.match(
+    /^calc\(\s*var\(\s*--(radius-[a-z0-9-]+)\s*\)\s*([+-])\s*([\d.]+)\s*px\s*\)$/i
+  );
+  if (radiusStepCalc) {
+    const base = resolveNumericFromCtx(`--${radiusStepCalc[1]}`, ctx, depth + 1);
+    if (base === null) return null;
+    const delta = parseFloat(radiusStepCalc[3]);
+    const raw =
+      radiusStepCalc[2] === "+"
+        ? Math.round(base + delta)
+        : Math.round(base - delta);
+    return Math.max(0, raw);
+  }
+
+  const varOnly = e.match(/^var\(--([a-zA-Z0-9-]+)\)$/);
+  if (varOnly) {
+    return resolveNumericFromCtx(`--${varOnly[1]}`, ctx, depth + 1);
+  }
+
+  return null;
+}
+
+function resolveNumericFromCtx(name, ctx, depth = 0) {
+  if (depth > 24) return null;
+  const v = ctx[name];
+  if (v === undefined) return null;
+  const s = String(v).trim();
+  const themeDirect = evalThemeNumeric(s, ctx);
+  if (themeDirect !== null) return themeDirect;
+  const direct = evalCalcNumeric(s, ctx, depth);
+  if (direct !== null) return direct;
+  const varM = s.match(/^var\(--([a-zA-Z0-9-]+)\)$/);
+  if (varM) return resolveNumericFromCtx(`--${varM[1]}`, ctx, depth + 1);
+  return null;
+}
+
+/**
+ * If a numeric semantic var chains to --spacing-scale-N or calc(var(--spacing)*N),
+ * return the step string so we can emit {primitive/spacing/N} in Figma export.
+ */
+function resolveSpacingPrimitiveRef(expr, ctx, seen, depth = 0) {
+  if (depth > 48) return null;
+  const s = String(expr).trim().replace(/\u2212/g, "-");
+
+  const calcM = s.match(/^calc\(var\(--spacing\)\s*\*\s*([\d.]+)\)$/i);
+  if (calcM) {
+    const k = normalizeSpacingStep(calcM[1]);
+    return k !== null && SPACING_PRIMITIVE_KEYS.has(k) ? k : null;
+  }
+
+  const themeSp =
+    s.match(/^theme\(\s*['"]spacing\.(\d+)['"]\s*\)$/i) ||
+    s.match(/^theme\(\s*spacing\.(\d+)\s*\)$/i);
+  if (themeSp) {
+    const k = themeSp[1];
+    return SPACING_PRIMITIVE_KEYS.has(k) ? k : null;
+  }
+
+  const spacingFn = s.match(/^--spacing\(\s*(\d+)\s*\)$/i);
+  if (spacingFn) {
+    const k = spacingFn[1];
+    return SPACING_PRIMITIVE_KEYS.has(k) ? k : null;
+  }
+
+  const scaleM = s.match(/^var\(--spacing-scale-([\d.]+)\)$/i);
+  if (scaleM) {
+    const k = normalizeSpacingStep(scaleM[1]);
+    return k !== null && SPACING_PRIMITIVE_KEYS.has(k) ? k : null;
+  }
+
+  const varM = s.match(/^var\(--([a-zA-Z0-9-]+)\)$/i);
+  if (varM) {
+    const name = `--${varM[1]}`.toLowerCase();
+    if (seen.has(name)) return null;
+    seen.add(name);
+    const next = ctx[name];
+    if (next === undefined) {
+      seen.delete(name);
+      return null;
+    }
+    const out = resolveSpacingPrimitiveRef(next, ctx, seen, depth + 1);
+    seen.delete(name);
+    return out;
+  }
+
+  return null;
+}
+
+function normalizeSpacingStep(s) {
+  const n = parseFloat(String(s), 10);
+  if (!Number.isFinite(n)) return null;
+  if (!Number.isInteger(n)) return null;
+  return String(n);
+}
+
+function resolveSpacingPrimitiveFromCtx(cssVar, ctx) {
+  const raw = ctx[cssVar];
+  if (raw === undefined) return null;
+  return resolveSpacingPrimitiveRef(raw, ctx, new Set(), 0);
+}
+
+function resolveRadiusPrimitiveRef(expr, ctx, seen, depth = 0) {
+  if (depth > 48) return null;
+  const s = String(expr).trim().replace(/\u2212/g, "-");
+
+  const themeR =
+    s.match(/^theme\(\s*['"]radius\.([a-z0-9]+)['"]\s*\)$/i) ||
+    s.match(/^theme\(\s*radius\.([a-z0-9]+)\s*\)$/i);
+  if (themeR) {
+    const k = themeR[1].toLowerCase();
+    return RADIUS_PRIMITIVE_KEYS.has(k) ? k : null;
+  }
+
+  const varM = s.match(/^var\(--([a-zA-Z0-9-]+)\)$/i);
+  if (varM) {
+    const name = `--${varM[1]}`.toLowerCase();
+    if (seen.has(name)) return null;
+    seen.add(name);
+    const next = ctx[name];
+    if (next === undefined) {
+      seen.delete(name);
+      return null;
+    }
+    const out = resolveRadiusPrimitiveRef(next, ctx, seen, depth + 1);
+    seen.delete(name);
+    return out;
+  }
+
+  return null;
+}
+
+function resolveRadiusPrimitiveFromCtx(cssVar, ctx) {
+  const raw = ctx[cssVar];
+  if (raw === undefined) return null;
+  return resolveRadiusPrimitiveRef(raw, ctx, new Set(), 0);
+}
+
+/**
+ * Resolve a CSS var to either:
+ *   { kind: 'palette', path: 'primitive.color.neutral.950' }
+ *   { kind: 'hex', hex: '#...' } | { kind: 'raw', value: 'rgba(...)' }
+ *   { kind: 'number', value: n }
+ */
+function resolveTokenValue(name, ctx, paletteHexByVar, depth = 0) {
+  if (depth > 32) return { kind: "unresolved", name };
+  const raw = ctx[name];
+  if (raw === undefined) return { kind: "unresolved", name };
+
+  const s = String(raw).trim();
+
+  // Direct palette var
+  const pal = s.match(/^var\(--(color-[a-z0-9-]+)\)$/i);
+  if (pal) {
+    const vn = `--${pal[1].toLowerCase()}`;
+    if (vn === "--color-white")
+      return { kind: "palette", path: "primitive.color.white" };
+    if (vn === "--color-black")
+      return { kind: "palette", path: "primitive.color.black" };
+    const primaryAlphaM = vn.match(/^--primary-(\d+)$/);
+    if (primaryAlphaM) {
+      return {
+        kind: "palette",
+        path: `primitive.color.primary-alpha.${primaryAlphaM[1]}`,
+      };
+    }
+    const rest = vn.slice("--color-".length);
+    const parts = rest.split("-");
+    const shade = parts[parts.length - 1];
+    const family = parts.slice(0, -1).join("-");
+    if (/^\d+$/.test(shade) && PALETTE_FAMILIES.has(family)) {
+      return {
+        kind: "palette",
+        path: `primitive.color.${family}.${shade}`,
+      };
+    }
+    const hx = paletteHexByVar[vn];
+    if (hx) return { kind: "hex", hex: hx };
+  }
+
+  if (/^rgba?\(/i.test(s)) return { kind: "raw", value: s.replace(/\s+/g, "") };
+
+  const hxDirect = colorValueToHex(s, paletteHexByVar);
+  if (hxDirect && !s.startsWith("var(")) return { kind: "hex", hex: hxDirect };
+
+  const num = evalCalcNumeric(s, ctx, 0);
+  if (num !== null && !/^var\(/i.test(s)) return { kind: "number", value: num };
+
+  const varM = s.match(/^var\(--([a-zA-Z0-9-]+)\)$/);
+  if (varM) {
+    const next = `--${varM[1]}`;
+    return resolveTokenValue(next, ctx, paletteHexByVar, depth + 1);
+  }
+
+  return { kind: "unresolved", name, raw: s };
+}
+
+function palettePathToAlias(path) {
+  const p = path.replace(/^primitive\.color\./, "");
+  const parts = p.split(".");
+  return `{primitive.color.${parts.join(".")}}`;
+}
+
+/** ------------------------------------------------------------------ */
+/** Semantic CSS var → output path + type + scopes */
+/** ------------------------------------------------------------------ */
+const SEMANTIC_MAP = {
+  "--color-bg": {
+    path: ["surface", "default"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--color-card": {
+    path: ["surface", "raised"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--color-popover": {
+    path: ["surface", "overlay"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--color-fg": {
+    path: ["text", "primary"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-card-fg": {
+    path: ["text", "on-raised"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-popover-fg": {
+    path: ["text", "on-overlay"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-muted": {
+    path: ["surface", "subtle"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--color-muted-fg": {
+    path: ["text", "muted"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-accent": {
+    path: ["surface", "accent"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--color-accent-fg": {
+    path: ["text", "on-accent"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-primary": {
+    path: ["brand", "primary"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-primary-fg": {
+    path: ["brand", "primary-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-secondary": {
+    path: ["brand", "secondary"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-secondary-fg": {
+    path: ["brand", "secondary-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-secondary-hover": {
+    path: ["brand", "secondary-hover"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-destructive": {
+    path: ["state", "danger"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-destructive-fg": {
+    path: ["state", "danger-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-success": {
+    path: ["state", "success"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-success-fg": {
+    path: ["state", "success-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-warning": {
+    path: ["state", "warning"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-warning-fg": {
+    path: ["state", "warning-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-info": {
+    path: ["state", "info"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-info-fg": {
+    path: ["state", "info-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-border": {
+    path: ["border", "default"],
+    type: "color",
+    scopes: ["STROKE_COLOR"],
+  },
+  "--color-input-border": {
+    path: ["border", "input"],
+    type: "color",
+    scopes: ["STROKE_COLOR"],
+  },
+  "--color-ring": {
+    path: ["border", "focus"],
+    type: "color",
+    scopes: ["STROKE_COLOR"],
+  },
+  "--color-link": {
+    path: ["text", "link"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-link-fg": {
+    path: ["text", "link-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-press": {
+    path: ["state", "press"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-press-fg": {
+    path: ["state", "press-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-selection": {
+    path: ["state", "selection"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-selection-fg": {
+    path: ["state", "selection-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--chart-1": {
+    path: ["chart", "1"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-2": {
+    path: ["chart", "2"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-3": {
+    path: ["chart", "3"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-4": {
+    path: ["chart", "4"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--chart-5": {
+    path: ["chart", "5"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--color-data-primary": {
+    path: ["dataSyntax", "primary"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-secondary": {
+    path: ["dataSyntax", "secondary"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-currency": {
+    path: ["dataSyntax", "currency"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-entity": {
+    path: ["dataSyntax", "entity"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-identifier": {
+    path: ["dataSyntax", "identifier"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-category": {
+    path: ["dataSyntax", "category"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-datetime": {
+    path: ["dataSyntax", "datetime"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-status-positive": {
+    path: ["dataSyntax", "status", "positive"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-status-negative": {
+    path: ["dataSyntax", "status", "negative"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-status-warning": {
+    path: ["dataSyntax", "status", "warning"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-status-neutral": {
+    path: ["dataSyntax", "status", "neutral"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-value-positive": {
+    path: ["dataSyntax", "value", "positive"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-value-negative": {
+    path: ["dataSyntax", "value", "negative"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--color-data-value-neutral": {
+    path: ["dataSyntax", "value", "neutral"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--radius-md": {
+    path: ["sizing", "radius-md"],
+    type: "number",
+    scopes: ["CORNER_RADIUS"],
+  },
+  "--radius-container": {
+    path: ["sizing", "radius-container"],
+    type: "number",
+    scopes: ["CORNER_RADIUS"],
+  },
+  "--radius-control": {
+    path: ["sizing", "radius-control"],
+    type: "number",
+    scopes: ["CORNER_RADIUS"],
+  },
+  "--radius-inset": {
+    path: ["sizing", "radius-inset"],
+    type: "number",
+    scopes: ["CORNER_RADIUS"],
+  },
+  "--radius-pill": {
+    path: ["sizing", "radius-pill"],
+    type: "number",
+    scopes: ["CORNER_RADIUS"],
+  },
+  "--size-control-sm": {
+    path: ["sizing", "control-height-sm"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--size-control-md": {
+    path: ["sizing", "control-height-md"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--size-control-lg": {
+    path: ["sizing", "control-height-lg"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--space-control-x-sm": {
+    path: ["sizing", "control-px-sm"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-control-x-md": {
+    path: ["sizing", "control-px-md"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-control-x-lg": {
+    path: ["sizing", "control-px-lg"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-gap-x-control": {
+    path: ["sizing", "control-gap-x"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-gap-y-control": {
+    path: ["sizing", "control-gap-y"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-card": {
+    path: ["sizing", "card-padding"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-content": {
+    path: ["sizing", "content-padding"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-menu": {
+    path: ["sizing", "menu-padding"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-menu-item-x": {
+    path: ["sizing", "menu-item-px"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--space-menu-item-y": {
+    path: ["sizing", "menu-item-py"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--size-icon": {
+    path: ["sizing", "icon-size"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--opacity-disabled": {
+    path: ["sizing", "disabled-opacity"],
+    type: "number",
+    scopes: ["OPACITY"],
+  },
+  "--size-badge": {
+    path: ["sizing", "badge-height"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--space-badge-x": {
+    path: ["sizing", "badge-px"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--size-avatar-sm": {
+    path: ["sizing", "avatar-sm"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--size-avatar-md": {
+    path: ["sizing", "avatar-md"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--size-avatar-lg": {
+    path: ["sizing", "avatar-lg"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--layout-rail-width": {
+    path: ["sizing", "sidebar-width"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--data-table-row-height-sm": {
+    path: ["components", "data-table", "row-height-sm"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--data-table-row-height-md": {
+    path: ["components", "data-table", "row-height-md"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--data-table-row-height-lg": {
+    path: ["components", "data-table", "row-height-lg"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--data-table-header-height": {
+    path: ["components", "data-table", "header-height"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--data-table-cell-px": {
+    path: ["components", "data-table", "cell-px"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--data-table-cell-py": {
+    path: ["components", "data-table", "cell-py"],
+    type: "number",
+    scopes: ["GAP"],
+  },
+  "--data-table-row-divider-width": {
+    path: ["components", "data-table", "row-divider-width"],
+    type: "number",
+    scopes: ["WIDTH_HEIGHT"],
+  },
+  "--data-table-font-size": {
+    path: ["components", "data-table", "font-size"],
+    type: "number",
+    scopes: ["FONT_SIZE"],
+  },
+  "--data-table-header-font-size": {
+    path: ["components", "data-table", "header-font-size"],
+    type: "number",
+    scopes: ["FONT_SIZE"],
+  },
+  "--data-table-font-weight": {
+    path: ["components", "data-table", "font-weight"],
+    type: "number",
+    scopes: ["FONT_WEIGHT"],
+  },
+  "--data-table-header-font-weight": {
+    path: ["components", "data-table", "header-font-weight"],
+    type: "number",
+    scopes: ["FONT_WEIGHT"],
+  },
+  "--data-table-header-bg": {
+    path: ["components", "data-table", "header-bg"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--data-table-header-fg": {
+    path: ["components", "data-table", "header-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--data-table-row-bg-hover": {
+    path: ["components", "data-table", "row-bg-hover"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--data-table-row-fg-selected": {
+    path: ["components", "data-table", "row-fg-selected"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  "--table-row-bg-selected": {
+    path: ["components", "data-table", "row-bg-selected"],
+    type: "color",
+    scopes: ["FRAME_FILL", "SHAPE_FILL"],
+  },
+  "--table-row-fg-selected": {
+    path: ["components", "data-table", "row-fg-selected"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+  /* Overlays use color-mix(oklch) — not resolved by this exporter */
+  "--slider-thumb-bg": {
+    path: ["components", "slider", "thumb-bg"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--table-checkbox-in-selected-bg": {
+    path: ["components", "data-table", "checkbox-in-selected-bg"],
+    type: "color",
+    scopes: ["ALL_FILLS"],
+  },
+  "--table-checkbox-in-selected-fg": {
+    path: ["components", "data-table", "checkbox-in-selected-fg"],
+    type: "color",
+    scopes: ["TEXT_FILL"],
+  },
+};
+
+function setDeep(root, parts, leaf) {
+  let cur = root;
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    const isLast = i === parts.length - 1;
+    if (isLast) {
+      cur[p] = leaf;
     } else {
-      mode.radius[key] = { $type: 'string', $value: val, $scopes: ['CORNER_RADIUS'] }
-    }
-  }
-
-  mode.spacing = {}
-
-  const spacingTokens = {
-    'control-height-sm': { scopes: ['WIDTH_HEIGHT'] },
-    'control-height-md': { scopes: ['WIDTH_HEIGHT'] },
-    'control-height-lg': { scopes: ['WIDTH_HEIGHT'] },
-    'control-px-sm': { scopes: ['GAP'] },
-    'control-px-md': { scopes: ['GAP'] },
-    'control-px-lg': { scopes: ['GAP'] },
-    'control-gap-x': { scopes: ['GAP'] },
-    'control-gap-y': { scopes: ['GAP'] },
-    'card-padding': { scopes: ['GAP'] },
-    'content-padding': { scopes: ['GAP'] },
-    'menu-padding': { scopes: ['GAP'] },
-    'menu-item-px': { scopes: ['GAP'] },
-    'menu-item-py': { scopes: ['GAP'] },
-    'icon-size': { scopes: ['WIDTH_HEIGHT'] },
-    'badge-height': { scopes: ['WIDTH_HEIGHT'] },
-    'badge-px': { scopes: ['GAP'] },
-    'avatar-size-sm': { scopes: ['WIDTH_HEIGHT'] },
-    'avatar-size-md': { scopes: ['WIDTH_HEIGHT'] },
-    'avatar-size-lg': { scopes: ['WIDTH_HEIGHT'] },
-    'sidebar-width': { scopes: ['WIDTH_HEIGHT'] },
-  }
-
-  for (const [key, meta] of Object.entries(spacingTokens)) {
-    const val = vars[`--${key}`]
-    if (!val) continue
-    const px = toExportPx(val, vars)
-    if (px !== null) {
-      mode.spacing[key] = { $type: 'float', $value: px, $scopes: meta.scopes }
-    }
-  }
-
-  const disabledOpacity = vars['--disabled-opacity']
-  if (disabledOpacity) {
-    mode['disabled-opacity'] = {
-      $type: 'float',
-      $value: parseFloat(disabledOpacity),
-      $scopes: ['OPACITY'],
-    }
-  }
-
-  mode['data-table'] = {}
-
-  const dtSizeTokens = {
-    'row-height-sm': { scopes: ['WIDTH_HEIGHT'] },
-    'row-height-md': { scopes: ['WIDTH_HEIGHT'] },
-    'row-height-lg': { scopes: ['WIDTH_HEIGHT'] },
-    'header-height': { scopes: ['WIDTH_HEIGHT'] },
-    'cell-px': { scopes: ['GAP'] },
-  }
-  for (const [key, meta] of Object.entries(dtSizeTokens)) {
-    const val = vars[`--data-table-${key}`]
-    if (!val) continue
-    const px = toExportPx(val, vars)
-    if (px !== null) {
-      mode['data-table'][key] = { $type: 'float', $value: px, $scopes: meta.scopes }
-    }
-  }
-
-  const dtFontSize = vars['--data-table-font-size']
-  if (dtFontSize) {
-    const px = remToPx(dtFontSize)
-    if (px !== null)
-      mode['data-table']['font-size'] = { $type: 'float', $value: px, $scopes: ['FONT_SIZE'] }
-  }
-  const dtHeaderFontSize = vars['--data-table-header-font-size']
-  if (dtHeaderFontSize) {
-    const px = toExportPx(dtHeaderFontSize, vars)
-    if (px !== null)
-      mode['data-table']['header-font-size'] = {
-        $type: 'float',
-        $value: px,
-        $scopes: ['FONT_SIZE'],
+      const next = cur[p];
+      if (!next || typeof next !== "object" || next.$type) {
+        cur[p] = {};
       }
-  }
-
-  return mode
-}
-
-/** Dark mode — only entries present in `.dark` blocks; values fully resolved via merged map. */
-function buildDarkMode(rawDarkOverrides, resolvedMerged) {
-  const mode = { colors: {} }
-  for (const [name, rawVal] of Object.entries(rawDarkOverrides)) {
-    if (!isColorValue(rawVal)) continue
-    const resolved = resolvedMerged[name] ?? rawVal
-    const key = name.replace(/^--/, '')
-    mode.colors[key] = {
-      $type: 'color',
-      $value: resolved,
-      $scopes: ['ALL_FILLS', 'STROKE_COLOR'],
+      cur = cur[p];
     }
   }
-  return mode
 }
 
-function countTokens(obj) {
-  let count = 0
-  for (const v of Object.values(obj)) {
-    if (v && typeof v === 'object' && v.$type) count++
-    else if (v && typeof v === 'object' && !Array.isArray(v)) count += countTokens(v)
+function mergeResolvedColor(lightRes, darkRes) {
+  const toVal = (r) => {
+    if (r.kind === "palette") return palettePathToAlias(r.path);
+    if (r.kind === "hex") return normalizeColorForFigma(r.hex);
+    if (r.kind === "raw") return normalizeColorForFigma(r.value);
+    return null;
+  };
+  const L = toVal(lightRes);
+  const D = toVal(darkRes);
+  return { light: L, dark: D };
+}
+
+/** Nested tree → flat map (slash-separated paths) with $type, $value, $extensions. */
+function flattenTokens(obj, prefix = "", result = {}) {
+  for (const [key, value] of Object.entries(obj)) {
+    const path = prefix ? `${prefix}/${key}` : key;
+    if (value && typeof value === "object" && value.$type !== undefined) {
+      result[path] = value;
+    } else if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenTokens(value, path, result);
+    }
   }
-  return count
+  return result;
+}
+
+function buildVariablesFromFlat(flatTokens) {
+  const variables = {};
+  for (const [pathKey, token] of Object.entries(flatTokens)) {
+    if (!token || typeof token !== "object" || token.$type === undefined) {
+      continue;
+    }
+    if (!token.$value || typeof token.$value !== "object") {
+      continue;
+    }
+    variables[pathKey] = {
+      $type: token.$type,
+      valuesByMode: { ...token.$value },
+    };
+  }
+  return variables;
+}
+
+function isReferenceString(val) {
+  return (
+    typeof val === "string" &&
+    val.length >= 2 &&
+    val.startsWith("{") &&
+    val.endsWith("}")
+  );
+}
+
+/** Resolve `{path}` aliases to literals by walking referenced variables (same mode). */
+function resolveOneValue(val, mode, variables, visiting, depth = 0) {
+  if (depth > 96) return null;
+  if (typeof val === "number") return val;
+  if (typeof val === "boolean") return val;
+  if (typeof val !== "string") return val;
+  if (!isReferenceString(val)) return val;
+  const refPath = val.slice(1, -1);
+  if (!variables[refPath]) return val;
+  if (visiting.has(refPath)) return null;
+  visiting.add(refPath);
+  const inner = variables[refPath].valuesByMode[mode];
+  visiting.delete(refPath);
+  if (inner === undefined) return val;
+  return resolveOneValue(inner, mode, variables, visiting, depth + 1);
+}
+
+function coerceValueForType(type, val) {
+  if (val === null || val === undefined) {
+    if (type === "color") return "#000000";
+    if (type === "number" || type === "float") return 0;
+    return "";
+  }
+  if (type === "color") {
+    if (typeof val === "string" && isReferenceString(val)) {
+      return "#000000";
+    }
+    if (typeof val === "string" && /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(val)) {
+      return val.toLowerCase();
+    }
+    return typeof val === "string" ? val : String(val);
+  }
+  if (type === "number" || type === "float") {
+    if (typeof val === "number" && !Number.isNaN(val)) return val;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : 0;
+  }
+  if (type === "string") {
+    return typeof val === "string" ? val : String(val);
+  }
+  return val;
+}
+
+function resolveReferencesInVariables(variables) {
+  const out = {};
+  const modes = [M.L, M.D];
+  for (const [vk, v] of Object.entries(variables)) {
+    const t = v.$type;
+    const vbm = {};
+    for (const mode of modes) {
+      let val = v.valuesByMode[mode];
+      val = resolveOneValue(val, mode, variables, new Set());
+      vbm[mode] = coerceValueForType(t, val);
+    }
+    out[vk] = { $type: t, valuesByMode: vbm };
+  }
+  return out;
+}
+
+/** DTCG color object for Figma (sRGB components 0–1). */
+function hexToFigmaColor(hex) {
+  const raw = String(hex).trim().replace(/^#/, "").toLowerCase();
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let a = 1;
+  if (raw.length === 3) {
+    r = parseInt(raw[0] + raw[0], 16) / 255;
+    g = parseInt(raw[1] + raw[1], 16) / 255;
+    b = parseInt(raw[2] + raw[2], 16) / 255;
+  } else if (raw.length === 6) {
+    r = parseInt(raw.slice(0, 2), 16) / 255;
+    g = parseInt(raw.slice(2, 4), 16) / 255;
+    b = parseInt(raw.slice(4, 6), 16) / 255;
+  } else if (raw.length === 8) {
+    r = parseInt(raw.slice(0, 2), 16) / 255;
+    g = parseInt(raw.slice(2, 4), 16) / 255;
+    b = parseInt(raw.slice(4, 6), 16) / 255;
+    a = parseInt(raw.slice(6, 8), 16) / 255;
+  }
+  const hex6 =
+    "#" +
+    [r, g, b]
+      .map((c) =>
+        Math.min(255, Math.max(0, Math.round(c * 255)))
+          .toString(16)
+          .padStart(2, "0")
+      )
+      .join("");
+  const round4 = (x) => Math.round(x * 10000) / 10000;
+  return {
+    colorSpace: "srgb",
+    components: [round4(r), round4(g), round4(b)],
+    alpha: round4(a),
+    hex: hex6,
+  };
+}
+
+function formatTokenValueForExport(type, val) {
+  if (type === "color") {
+    const s = typeof val === "string" ? val : "#000000";
+    return hexToFigmaColor(s);
+  }
+  if (type === "number" || type === "float") {
+    if (typeof val === "number" && Number.isFinite(val)) return val;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : 0;
+  }
+  if (type === "string") {
+    return typeof val === "string" ? val : String(val);
+  }
+  return val;
+}
+
+/** Flat slash paths → nested groups; each leaf is { $type, $value }. */
+function setNestedToken(root, segments, leaf) {
+  let cur = root;
+  for (let i = 0; i < segments.length - 1; i++) {
+    const s = segments[i];
+    const next = cur[s];
+    if (next !== undefined && next !== null && typeof next === "object" && next.$type !== undefined) {
+      throw new Error(
+        `Token path conflict with existing token at "${segments.slice(0, i + 1).join("/")}"`
+      );
+    }
+    if (!cur[s] || typeof cur[s] !== "object" || cur[s].$type !== undefined) {
+      cur[s] = {};
+    }
+    cur = cur[s];
+  }
+  const last = segments[segments.length - 1];
+  cur[last] = leaf;
+}
+
+/**
+ * Nested output per mode. Primitives → resolved literals (colors as sRGB objects).
+ * Semantic colors that reference primitives keep DTCG alias strings `{primitive/...}`.
+ */
+function flatToNestedTreeForMode(flat, resolvedVariables, modeName) {
+  const root = {};
+  for (const [pathKey, v] of Object.entries(resolvedVariables)) {
+    const t = v.$type;
+    const resolvedVal = v.valuesByMode[modeName];
+    if (resolvedVal === undefined) continue;
+
+    let single;
+    if (pathKey.startsWith("semantic/")) {
+      const rawTok = flat[pathKey];
+      const rawPerMode =
+        rawTok &&
+        rawTok.$value &&
+        typeof rawTok.$value === "object"
+          ? rawTok.$value[modeName]
+          : undefined;
+      const keepAlias =
+        (t === "color" || t === "number") &&
+        typeof rawPerMode === "string" &&
+        isReferenceString(rawPerMode);
+      if (keepAlias) {
+        single = rawPerMode;
+      } else {
+        single = formatTokenValueForExport(t, resolvedVal);
+      }
+    } else {
+      single = formatTokenValueForExport(t, resolvedVal);
+    }
+
+    if (single === undefined) continue;
+    const leaf = { $type: t, $value: single };
+    const segments = pathKey.split("/").filter(Boolean);
+    if (segments.length === 0) continue;
+    setNestedToken(root, segments, leaf);
+  }
+  return root;
+}
+
+function countColorSwatches(colorRoot) {
+  let n = 0;
+  for (const node of Object.values(colorRoot)) {
+    if (node && typeof node === "object" && node.$type === "color") {
+      n += 1;
+    } else if (node && typeof node === "object") {
+      n += Object.keys(node).length;
+    }
+  }
+  return n;
+}
+
+/** Primary alpha scale (--primary-5 … --primary-90) from :root → primitives + hexByVar. */
+function applyAlphaPrimitivesFromRoot(primitive, hexByVar, rootVars) {
+  const primaryAlpha = {};
+  for (const [k, raw] of Object.entries(rootVars)) {
+    const m = k.match(/^--primary-(\d+)$/i);
+    if (!m) continue;
+    const hx = normalizeColorForFigma(String(raw).trim());
+    if (typeof hx !== "string" || !hx.startsWith("#")) continue;
+    hexByVar[k.toLowerCase()] = hx;
+    const step = m[1];
+    primaryAlpha[step] = {
+      $type: "color",
+      $value: modePair(hx, hx),
+      $extensions: { "com.figma.scopes": figmaScopes(["ALL_FILLS"]) },
+    };
+  }
+  primitive.color["primary-alpha"] = primaryAlpha;
+}
+
+function buildPrimitives(themeVars) {
+  const { hexByVar, primitiveColor } = buildPaletteFromTheme(themeVars);
+  mergePaletteFromPrimitiveVars(themeVars, hexByVar, primitiveColor);
+
+  const spacing = {};
+  for (const k of SPACING_SCALE_STEPS) {
+    spacing[String(k)] = {
+      $type: "number",
+      $value: modePair(k * SPACING_PX, k * SPACING_PX),
+      $extensions: { "com.figma.scopes": figmaScopes(["GAP"]) },
+    };
+  }
+
+  const primRadius = {
+    none: 0,
+    sm: resolveNumericFromCtx("--radius-sm", themeVars) ?? 4,
+    md: resolveNumericFromCtx("--radius-md", themeVars) ?? 6,
+    lg: resolveNumericFromCtx("--radius-lg", themeVars) ?? 8,
+    xl: resolveNumericFromCtx("--radius-xl", themeVars) ?? 12,
+    "2xl": resolveNumericFromCtx("--radius-2xl", themeVars) ?? 16,
+    "3xl": resolveNumericFromCtx("--radius-3xl", themeVars) ?? 24,
+    full: resolveNumericFromCtx("--radius-full", themeVars) ?? 9999,
+  };
+  for (const k of Object.keys(primRadius)) {
+    if (k === "none") continue;
+    const v = primRadius[k];
+    if (typeof v === "number" && Number.isFinite(v)) {
+      primRadius[k] = Math.round(v);
+    }
+  }
+  const primitiveRadius = {};
+  for (const [k, v] of Object.entries(primRadius)) {
+    primitiveRadius[k] = {
+      $type: "number",
+      $value: modePair(v, v),
+      $extensions: { "com.figma.scopes": figmaScopes(["CORNER_RADIUS"]) },
+    };
+  }
+
+  /* Omit font family string primitives — Figma’s JSON importer often rejects string tokens here. */
+  const primitiveFont = {
+    size: {
+      xs: numPrim(12, "FONT_SIZE"),
+      sm: numPrim(14, "FONT_SIZE"),
+      md: numPrim(16, "FONT_SIZE"),
+      lg: numPrim(18, "FONT_SIZE"),
+      xl: numPrim(20, "FONT_SIZE"),
+      "2xl": numPrim(24, "FONT_SIZE"),
+      "3xl": numPrim(30, "FONT_SIZE"),
+      "4xl": numPrim(36, "FONT_SIZE"),
+    },
+    weight: {
+      regular: numPrim(400, "FONT_WEIGHT"),
+      medium: numPrim(500, "FONT_WEIGHT"),
+      semibold: numPrim(600, "FONT_WEIGHT"),
+      bold: numPrim(700, "FONT_WEIGHT"),
+    },
+    lineHeight: {
+      tight: numPrim(1.25, "LINE_HEIGHT"),
+      normal: numPrim(1.5, "LINE_HEIGHT"),
+      relaxed: numPrim(1.75, "LINE_HEIGHT"),
+    },
+    letterSpacing: {
+      tight: numPrim(-2, "LETTER_SPACING"),
+      wide: numPrim(2, "LETTER_SPACING"),
+    },
+  };
+
+  const primitive = {
+    color: {},
+    spacing,
+    radius: primitiveRadius,
+    font: primitiveFont,
+  };
+
+  const whiteHex = normalizeColorForFigma("#ffffff");
+  const blackHex = normalizeColorForFigma("#000000");
+  primitive.color.white = {
+    $type: "color",
+    $value: modePair(whiteHex, whiteHex),
+    $extensions: { "com.figma.scopes": figmaScopes(["ALL_FILLS"]) },
+  };
+  primitive.color.black = {
+    $type: "color",
+    $value: modePair(blackHex, blackHex),
+    $extensions: { "com.figma.scopes": figmaScopes(["ALL_FILLS"]) },
+  };
+
+  for (const [family, shades] of Object.entries(primitiveColor)) {
+    primitive.color[family] = {};
+    for (const [shade, hex] of Object.entries(shades)) {
+      const key = shade === "default" ? "default" : shade;
+      primitive.color[family][key] = {
+        $type: "color",
+        $value: modePair(normalizeColorForFigma(hex), normalizeColorForFigma(hex)),
+        $extensions: { "com.figma.scopes": figmaScopes(["ALL_FILLS"]) },
+      };
+    }
+  }
+
+  return { primitive, hexByVar };
+}
+
+function numPrim(n, scope) {
+  return {
+    $type: "number",
+    $value: modePair(n, n),
+    $extensions: { "com.figma.scopes": figmaScopes([scope]) },
+  };
 }
 
 function main() {
-  const rawRoot = mergeAllRoots(TOKEN_SOURCE_FILES)
-  const rawDark = mergeAllDark(TOKEN_SOURCE_FILES)
-  const vars = toLegacyVars(rawRoot)
-  const resolvedMerged = toLegacyVars({ ...rawRoot, ...rawDark })
+  const warnings = [];
 
-  const lightMode = buildLightMode(vars)
-  const darkMode = buildDarkMode(rawDark, resolvedMerged)
-
-  const output = [
-    {
-      'Design System': {
-        modes: {
-          'Light Mode': lightMode,
-          'Dark Mode': darkMode,
-        },
-      },
-    },
-  ]
-
-  const jsonStr = JSON.stringify(output, null, 2)
-  try {
-    JSON.parse(jsonStr)
-  } catch (e) {
-    console.error('Invalid JSON generated:', e.message)
-    process.exit(1)
+  if (!fs.existsSync(TOKENS_CSS)) {
+    console.error("Missing", TOKENS_CSS);
+    process.exit(1);
   }
 
-  const outputDir = path.dirname(OUTPUT_FILE)
-  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
-  fs.writeFileSync(OUTPUT_FILE, jsonStr)
+  const tokensCss = loadMergedTokensCss();
 
-  console.log('Exported tokens/variables-pro.json (Variables Pro format)')
-  console.log(`  Light Mode: ${countTokens(lightMode)} tokens`)
-  console.log(`  Dark Mode: ${countTokens(darkMode)} color overrides`)
-  console.log('  (Full npm run tokens also writes tokens/light.json + tokens/dark.json via export-tokens-figma.js)')
+  const themeVars = {};
+  const lightRoot = extractAllRootVars(tokensCss);
+  const darkRoot = extractAllDarkVars(tokensCss);
+
+  const mergedLightCtx = { ...themeVars, ...lightRoot };
+  const mergedDarkCtx = { ...themeVars, ...lightRoot, ...darkRoot };
+
+  const { primitive, hexByVar } = buildPrimitives(mergedLightCtx);
+  applyAlphaPrimitivesFromRoot(primitive, hexByVar, lightRoot);
+
+  const semantic = {};
+  let semanticCount = 0;
+  let darkOverrides = 0;
+
+  for (const [cssVar, meta] of Object.entries(SEMANTIC_MAP)) {
+    if (meta.type === "color") {
+      const lr = resolveTokenValue(cssVar, mergedLightCtx, hexByVar);
+      const dr = resolveTokenValue(cssVar, mergedDarkCtx, hexByVar);
+      if (lr.kind === "unresolved" || dr.kind === "unresolved") {
+        warnings.push(`Unresolved color: ${cssVar}`);
+        continue;
+      }
+      const { light, dark } = mergeResolvedColor(lr, dr);
+      if (light === null || dark === null) {
+        warnings.push(`Unresolved color value: ${cssVar}`);
+        continue;
+      }
+      if (light !== dark) darkOverrides++;
+
+      const node = {
+        $type: "color",
+        $value: modePair(light, dark),
+        $extensions: { "com.figma.scopes": figmaScopes(meta.scopes) },
+      };
+      setDeep(semantic, meta.path, node);
+      semanticCount++;
+    } else if (meta.type === "number") {
+      const stepL = resolveSpacingPrimitiveFromCtx(cssVar, mergedLightCtx);
+      const stepD = resolveSpacingPrimitiveFromCtx(cssVar, mergedDarkCtx);
+      if (
+        stepL !== null &&
+        stepD !== null &&
+        stepL === stepD &&
+        SPACING_PRIMITIVE_KEYS.has(stepL)
+      ) {
+        const alias = `{primitive/spacing/${stepL}}`;
+        const node = {
+          $type: "number",
+          $value: modePair(alias, alias),
+          $extensions: { "com.figma.scopes": figmaScopes(meta.scopes) },
+        };
+        setDeep(semantic, meta.path, node);
+        semanticCount++;
+        continue;
+      }
+
+      const radL = resolveRadiusPrimitiveFromCtx(cssVar, mergedLightCtx);
+      const radD = resolveRadiusPrimitiveFromCtx(cssVar, mergedDarkCtx);
+      if (
+        radL !== null &&
+        radD !== null &&
+        radL === radD &&
+        RADIUS_PRIMITIVE_KEYS.has(radL)
+      ) {
+        const alias = `{primitive/radius/${radL}}`;
+        const node = {
+          $type: "number",
+          $value: modePair(alias, alias),
+          $extensions: { "com.figma.scopes": figmaScopes(meta.scopes) },
+        };
+        setDeep(semantic, meta.path, node);
+        semanticCount++;
+        continue;
+      }
+
+      const ln = resolveNumericFromCtx(cssVar, mergedLightCtx);
+      const dn = resolveNumericFromCtx(cssVar, mergedDarkCtx);
+      if (ln === null || dn === null) {
+        warnings.push(`Unresolved number: ${cssVar}`);
+        continue;
+      }
+      if (ln !== dn) darkOverrides++;
+
+      const node = {
+        $type: "number",
+        $value: modePair(ln, dn),
+        $extensions: { "com.figma.scopes": figmaScopes(meta.scopes) },
+      };
+      setDeep(semantic, meta.path, node);
+      semanticCount++;
+    }
+  }
+
+  // Warn for :root vars not exported (skip known primitives / motion / component-only)
+  function isKnownUnmappedToken(k) {
+    if (/^--primitive-/.test(k)) return true;
+    if (/^--chart-\d+$/.test(k)) return true;
+    if (/^--color-primary-alpha-/.test(k)) return true;
+    if (/^--shadow-/.test(k)) return true;
+    if (/^--font-/.test(k)) return true;
+    if (/^--leading-/.test(k)) return true;
+    if (/^--duration-/.test(k)) return true;
+    if (/^--ease-/.test(k)) return true;
+    if (/^--transition-/.test(k)) return true;
+    if (/^--z-/.test(k)) return true;
+    if (/^--container-/.test(k)) return true;
+    if (/^--color-overlay-/.test(k)) return true;
+    if (/^--size-ring-/.test(k)) return true;
+    if (k === "--color-input-surface") return true;
+    if (k === "--color-grid-selection") return true;
+    if (k === "--color-surface-fixed-light") return true;
+    if (k === "--font-size-data") return true;
+    if (/^--color-(?:destructive|success|warning|info)-subtle/.test(k)) return true;
+    if (k === "--space-gap-control") return true;
+    if (/^--(?:dialog|drawer)-overlay-bg$/.test(k)) return true;
+    if (k === "--alert-dialog-overlay-bg") return true;
+    if (k === "--sheet-overlay-bg") return true;
+    if (/^--switch-/.test(k)) return true;
+    if (/^--input-bg/.test(k)) return true;
+    if (k === "--sidebar-width") return true;
+    return false;
+  }
+
+  for (const k of Object.keys(lightRoot)) {
+    if (isKnownUnmappedToken(k)) continue;
+    if (k === "--control-gap") continue;
+    if (/^--primary-\d+$/i.test(k)) continue;
+    if (/^--spacing-scale-\d+$/i.test(k)) continue;
+    if (/^--radius-(sm|lg|xl|full)$/i.test(k)) continue;
+    if (!SEMANTIC_MAP[k]) {
+      warnings.push(`No semantic mapping for ${k} (skipped)`);
+    }
+  }
+
+  const output = { primitive, semantic };
+
+  const flat = flattenTokens(output);
+
+  for (const token of Object.values(flat)) {
+    if (token.$value && typeof token.$value === "object") {
+      for (const [mode, val] of Object.entries(token.$value)) {
+        if (
+          typeof val === "string" &&
+          val.startsWith("{") &&
+          val.endsWith("}")
+        ) {
+          token.$value[mode] =
+            "{" + val.slice(1, -1).replace(/\./g, "/") + "}";
+        }
+      }
+    }
+  }
+
+  const rawVars = buildVariablesFromFlat(flat);
+  const resolvedVars = resolveReferencesInVariables(rawVars);
+  const lightTokens = flatToNestedTreeForMode(flat, resolvedVars, M.L);
+  const darkTokens = flatToNestedTreeForMode(flat, resolvedVars, M.D);
+
+  if (!fs.existsSync(TOKENS_DIR)) fs.mkdirSync(TOKENS_DIR, { recursive: true });
+  fs.writeFileSync(OUTPUT_LIGHT, JSON.stringify(lightTokens, null, 2));
+  fs.writeFileSync(OUTPUT_DARK, JSON.stringify(darkTokens, null, 2));
+
+  const colorSwatches = countColorSwatches(primitive.color);
+
+  for (const w of warnings) console.warn("WARN:", w);
+
+  console.log("Signal — Figma native export");
+  console.log(
+    `  Primitives:  ${colorSwatches} color swatches + spacing + radius + typography`
+  );
+  console.log(
+    `  Semantic:    ${semanticCount} tokens (light mode), ${darkOverrides} values differ in dark mode`
+  );
+  console.log(`  Output:      tokens/light.json, tokens/dark.json`);
 }
 
-main()
+main();

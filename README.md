@@ -24,6 +24,38 @@ A Vite-based React component library with pure CSS theming, TypeScript declarati
 - `.ladle` — Ladle global provider/config
 - `tests/visual` — Playwright visual snapshot tests
 - `.changeset` — release/versioning automation config
+- `tokens/light.json`, `tokens/dark.json` — generated Figma Variables export (`npm run tokens`)
+
+## Design tokens and CSS (Signal migration)
+
+This library uses **pure CSS** (no Tailwind runtime). Styling is layered and token-driven, matching the Signal design-system approach.
+
+### Token layers (`src/tokens.css` → `src/styles/tokens/`)
+
+1. **`primitives.css`** — raw palette (`--primitive-*`), neutrals, and fixed scales. No light/dark meaning.
+2. **`semantic.css`** — product meaning: `--color-bg`, `--color-fg`, `--color-primary`, spacing, radius, typography, motion, z-index, etc. Light defaults live on `:root`; dark overrides use `:is(html.dark, html[data-theme='dark'])` so both class and `data-theme` strategies work.
+3. **`component-tokens.css`** — `@import`s per-component `*.tokens.css` files (e.g. `--input-bg`, `--dialog-overlay-bg`) that map to semantic variables. Add a new `*.tokens.css` here when a component needs shared aliases.
+
+**Runtime theme:** `ThemeProvider` sets `dark` on `<html>` and `data-theme` / `data-density`. Components consume `var(--…)` only; no hard-coded light/dark branches in TSX.
+
+### Stylesheet cascade (`src/styles/main.css`)
+
+| Order | File / area | Role |
+| --- | --- | --- |
+| 1 | `layers.css` | Declares `@layer` order: reset → base → components → utilities |
+| 2 | `tokens.css` | Custom properties (unlayered so variables win predictably) |
+| 3 | `reset.css` | `@layer reset` — box model, element defaults |
+| 4 | `base.css` | `@layer base` — `html`/`body`, typography, focus, selection |
+| 5 | `components/<name>/*.css` | `@layer components` — UI patterns |
+| 6 | `density-super-high.css` | `[data-density='super-high']` size overrides |
+| 7 | `global.css` | `@layer utilities` (`focus-ring`, `sr-only`) + rare cross-cutting rules |
+
+**Ladle only:** `.ladle/components.tsx` also imports `ladle-preview.css` so the preview canvas uses `--color-bg` (not shipped in `dist/style.css`).
+
+### Figma export
+
+- **`npm run tokens`** runs `scripts/export-tokens.cjs`, which parses the same CSS sources as the barrel (primitives, semantic, and every file listed in `component-tokens.css`) and writes **`tokens/light.json`** and **`tokens/dark.json`** for Figma’s native Variables import.
+- Regenerate after changing token CSS so design tooling stays in sync.
 
 ## Scripts
 
@@ -38,7 +70,7 @@ A Vite-based React component library with pure CSS theming, TypeScript declarati
 - `npm run test:a11y` — run accessibility tests (`jest-axe`)
 - `npm run test:visual` — run Playwright visual tests
 - `npm run format` — format source files
-- `npm run tokens` — export token JSON for Figma
+- `npm run tokens` — regenerate `tokens/light.json` + `tokens/dark.json` for Figma Variables
 - `npm run changeset` — create version change notes
 - `npm run version:packages` — apply changeset versions
 - `npm run release` — publish packages via changesets

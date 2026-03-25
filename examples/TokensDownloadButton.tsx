@@ -5,17 +5,23 @@ import { DownloadIcon } from 'lucide-react'
 import { Button } from '@/components/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
 
+import darkTokens from '../tokens/dark.json'
+import lightTokens from '../tokens/light.json'
+
+function downloadJson(filename: string, data: unknown) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export function TokensDownloadButton() {
-  const handleDownload = async () => {
-    const res = await fetch('/tokens/variables-pro.json')
-    if (!res.ok) return
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'variables-pro.json'
-    a.click()
-    URL.revokeObjectURL(url)
+  const handleDownload = () => {
+    downloadJson('signal-tokens-light.json', lightTokens)
+    requestAnimationFrame(() => downloadJson('signal-tokens-dark.json', darkTokens))
   }
 
   return (
@@ -26,12 +32,12 @@ export function TokensDownloadButton() {
             variant="outline"
             size="icon"
             onClick={handleDownload}
-            aria-label="Download tokens for Variables Pro"
+            aria-label="Download Figma token JSON (light and dark)"
           >
             <DownloadIcon className="example-theme-icon" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Tokens for Variables Pro</TooltipContent>
+        <TooltipContent>Download light.json + dark.json for Figma Variables</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
