@@ -65,6 +65,29 @@
     padding-block: var(--data-table-cell-py);
   }
 
+  .data-table-cell-align-right {
+    text-align: right;
+  }
+
+  /* Clear full-cell status tint when row is selected (trading blotter). */
+  .data-table-cell-bg-transparent {
+    background-color: transparent;
+  }
+
+  /* Fills td height; centers label in status / side metric cells. */
+  .blotter-metric-inner {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    font-weight: var(--font-weight-bold);
+  }
+
+  /* Text on saturated status/value cell backgrounds. */
+  .text-data-on-strong-bg {
+    color: var(--color-primary-fg);
+  }
+
   .data-table-empty-cell {
     height: 6rem;
     padding-inline: var(--data-table-cell-px);

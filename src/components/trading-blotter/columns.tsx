@@ -43,7 +43,7 @@ export const columns = [
     header: 'Status',
     meta: {
       blotterCellBackground: (row) => {
-        if (row.getIsSelected()) return 'bg-transparent'
+        if (row.getIsSelected()) return 'data-table-cell-bg-transparent'
         const status = row.getValue('status') as TradingBlotterRow['status']
         const map: Record<TradingBlotterRow['status'], string> = {
           FILL: 'bg-data-status-positive',
@@ -58,8 +58,8 @@ export const columns = [
       return (
         <div
           className={cn(
-            'flex h-full w-full items-center font-bold',
-            isSelected ? 'text-data-table-row-fg-selected' : 'text-primary-foreground'
+            'blotter-metric-inner',
+            isSelected ? 'text-data-table-row-fg-selected' : 'text-data-on-strong-bg'
           )}
         >
           {row.getValue('status')}
@@ -83,7 +83,7 @@ export const columns = [
     header: 'Side',
     meta: {
       blotterCellBackground: (row) => {
-        if (row.getIsSelected()) return 'bg-transparent'
+        if (row.getIsSelected()) return 'data-table-cell-bg-transparent'
         const side = row.getValue('side') as TradingBlotterRow['side']
         const map: Record<TradingBlotterRow['side'], string> = {
           BUY: 'bg-data-value-positive-subtle',
@@ -102,7 +102,7 @@ export const columns = [
       return (
         <div
           className={cn(
-            'flex h-full w-full items-center font-bold',
+            'blotter-metric-inner',
             isSelected
               ? 'text-data-table-row-fg-selected'
               : (sideText[side] ?? 'text-data-value-neutral')

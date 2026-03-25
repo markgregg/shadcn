@@ -34,7 +34,7 @@ export function TradingBlotter() {
                     className={cn(
                       'data-table-head-cell',
                       (header.column.columnDef.meta as BlotterColumnMeta | undefined)?.align ===
-                        'right' && 'text-right'
+                        'right' && 'data-table-cell-align-right'
                     )}
                   >
                     {header.isPlaceholder
@@ -61,7 +61,7 @@ export function TradingBlotter() {
                         className={cn(
                           'data-table-cell',
                           meta?.blotterCellBackground?.(cell.row),
-                          meta?.align === 'right' && 'text-right'
+                          meta?.align === 'right' && 'data-table-cell-align-right'
                         )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
