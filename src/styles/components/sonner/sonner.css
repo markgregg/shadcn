@@ -28,3 +28,24 @@
     color: var(--sonner-muted-fg);
   }
 }
+
+/* Unlayered: override Sonner’s inline transition rules */
+[data-sonner-toaster].toaster {
+  transition: transform 0.4s ease !important;
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast] {
+  transition:
+    transform 0.4s ease,
+    opacity 0.4s ease,
+    height 0.4s ease,
+    box-shadow 0.2s ease !important;
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast] > * {
+  transition: opacity 0.4s ease !important;
+}
+
+[data-sonner-toaster].toaster [data-sonner-toast][data-swiping='true'] {
+  transition: none !important;
+}

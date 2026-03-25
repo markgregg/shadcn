@@ -1,80 +1,14 @@
-/* Keyframes, third-party overrides, utilities — after component layers */
-
-@keyframes accordion-down {
-  from {
-    height: 0;
-  }
-  to {
-    height: var(--radix-accordion-content-height);
-  }
-}
-@keyframes accordion-up {
-  from {
-    height: var(--radix-accordion-content-height);
-  }
-  to {
-    height: 0;
-  }
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes spinner-rotate {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-[data-sonner-toaster].toaster {
-  transition: transform 0.4s ease !important;
-}
-
-[data-sonner-toaster].toaster [data-sonner-toast] {
-  transition:
-    transform 0.4s ease,
-    opacity 0.4s ease,
-    height 0.4s ease,
-    box-shadow 0.2s ease !important;
-}
-
-[data-sonner-toaster].toaster [data-sonner-toast] > * {
-  transition: opacity 0.4s ease !important;
-}
-
-[data-sonner-toaster].toaster [data-sonner-toast][data-swiping='true'] {
-  transition: none !important;
-}
+/*
+ * App shell: small global utilities, Ladle chrome, and one-off token rules.
+ * Component keyframes live next to their components (accordion, skeleton, spinner).
+ * Sonner transition overrides live in sonner.css.
+ */
 
 @layer utilities {
   .focus-ring:focus-visible {
     outline: none;
     border-color: var(--color-ring);
     box-shadow: 0 0 0 var(--size-ring-width) color-mix(in oklch, var(--color-ring) 50%, transparent);
-  }
-
-  .animate-accordion-down {
-    animation: accordion-down var(--duration-normal) var(--ease-out);
-  }
-  .animate-accordion-up {
-    animation: accordion-up var(--duration-normal) var(--ease-out);
-  }
-
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  .animate-spin {
-    animation: spin 1s linear infinite;
   }
 
   .sr-only {

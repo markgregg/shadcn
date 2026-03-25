@@ -1,3 +1,9 @@
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @layer components {
   /* Rotation on a wrapper — SVG root transform animation is unreliable across engines. */
   .spinner-rotator {
