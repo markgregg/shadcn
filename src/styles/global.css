@@ -1,7 +1,7 @@
 /*
- * App shell: small global utilities, Ladle chrome, and one-off token rules.
- * Component keyframes live next to their components (accordion, skeleton, spinner).
- * Sonner transition overrides live in sonner.css.
+ * Cross-cutting styles that are not tied to a single component:
+ * shared utilities (focus-ring, sr-only), and one token bridge rule.
+ * Ladle preview chrome lives in ladle-preview.css (dev-only import).
  */
 
 @layer utilities {
@@ -24,16 +24,11 @@
   }
 }
 
+/* Light theme: checkbox fill when row selected + cell tint (see table.tokens.css). */
 html:not(.dark):not([data-theme='dark'])
   [data-in-selected-row]
   [data-slot='checkbox'][aria-checked='true'] {
   background-color: var(--table-checkbox-in-selected-bg);
   border-color: var(--table-checkbox-in-selected-bg);
   color: var(--table-checkbox-in-selected-fg);
-}
-
-/* Ladle preview shell — default chrome is grey; use semantic bg so dark mode matches --color-bg */
-.ladle-background,
-.ladle-wrapper {
-  background-color: var(--color-bg);
 }

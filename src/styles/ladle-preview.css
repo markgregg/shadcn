@@ -1,0 +1,5 @@
+/* Ladle-only: default preview chrome is grey; match semantic --color-bg for theme parity. */
+.ladle-background,
+.ladle-wrapper {
+  background-color: var(--color-bg);
+}

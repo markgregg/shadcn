@@ -16,7 +16,7 @@ A Vite-based React component library with pure CSS theming, TypeScript declarati
 
 - `src/components` — all exported components
 - `src/tokens.css` — token barrel (primitives → semantic → component maps)
-- `src/styles/main.css` — single entry: layers, reset, base, `components/<name>/`, density, app shell
+- `src/styles/main.css` — single entry: layers, tokens, reset, base, `components/<name>/`, density, `global.css`. Ladle imports `ladle-preview.css` in addition for preview chrome.
 - `src/styles/tokens/` — `primitives.css`, `semantic.css`, `component-tokens.css`
 - `src/styles/components/<name>/` — per-component `.css` / `.tokens.css`
 - `src/index.ts` — public exports
