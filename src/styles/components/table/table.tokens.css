@@ -5,6 +5,6 @@
   --table-checkbox-in-selected-fg: var(--color-fg);
 }
 
-.dark {
+:is(html.dark, html[data-theme='dark']) {
   --table-checkbox-in-selected-fg: var(--color-primary-fg);
 }

@@ -295,7 +295,7 @@
     color: var(--color-primary-fg);
   }
 
-  .dark .calendar-day-button:hover {
+  :is(html.dark, html[data-theme='dark']) .calendar-day-button:hover {
     color: var(--color-accent-fg);
   }
 }

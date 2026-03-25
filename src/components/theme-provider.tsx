@@ -58,7 +58,7 @@ function applyDensityClass(density: Density) {
   document.documentElement.setAttribute('data-density', density)
 }
 
-/** Apply immediately during state init so first paint uses correct CSS variables (`.dark` / `data-density`). */
+/** Apply immediately during state init so first paint uses correct CSS variables (`dark` class + `data-theme` / `data-density`). */
 function initThemeState(defaultTheme: Theme | 'system', storageKey: string): Theme {
   const next = resolveTheme(defaultTheme, storageKey)
   if (typeof document !== 'undefined') {

@@ -29,7 +29,7 @@
     pointer-events: none;
   }
 
-  .dark [data-slot='avatar']::after {
+  :is(html.dark, html[data-theme='dark']) [data-slot='avatar']::after {
     mix-blend-mode: lighten;
   }
 

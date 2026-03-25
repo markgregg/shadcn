@@ -1,4 +1,9 @@
-/* Global semantic tokens — reference primitives only; theme via .dark overrides here */
+/*
+ * Global semantic tokens — reference primitives only.
+ * Dark overrides must match both class and data-attribute strategies:
+ * many apps (e.g. next-themes with attribute="data-theme") set data-theme only,
+ * which would otherwise leave components on light tokens while other styles react to data-theme.
+ */
 :root {
   /* Surfaces & text */
   --color-bg: var(--primitive-white);
@@ -220,7 +225,7 @@
   --container-2xl: 1536px;
 }
 
-.dark {
+:is(html.dark, html[data-theme='dark']) {
   --color-bg: var(--primitive-black);
   --color-fg: var(--primitive-neutral-50);
   --color-card: var(--primitive-neutral-950);

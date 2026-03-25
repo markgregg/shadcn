@@ -621,7 +621,7 @@
     transform: rotate(0deg) scale(1);
   }
 
-  .dark .gallery-theme-icon--sun {
+  :is(html.dark, html[data-theme='dark']) .gallery-theme-icon--sun {
     transform: rotate(-90deg) scale(0);
   }
 
@@ -630,7 +630,7 @@
     transform: rotate(90deg) scale(0);
   }
 
-  .dark .gallery-theme-icon--moon {
+  :is(html.dark, html[data-theme='dark']) .gallery-theme-icon--moon {
     transform: rotate(0deg) scale(1);
   }
 
